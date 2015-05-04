@@ -1,15 +1,14 @@
 <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/chessboard"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:padding="5dp"
-    android:verticalSpacing="5dp"
+    android:background="#ffffff"
+    android:columnWidth="60dp"
+    android:gravity="center_horizontal"
     android:horizontalSpacing="20dp"
     android:numColumns="8"
-    android:columnWidth="60dp"
+    android:padding="5dp"
     android:stretchMode="columnWidth"
-    android:gravity="center_horizontal"
-    android:background="#ffffff">
+    android:verticalSpacing="5dp">
 
 </GridLayout>
