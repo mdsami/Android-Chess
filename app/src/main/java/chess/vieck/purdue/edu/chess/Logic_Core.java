@@ -130,67 +130,67 @@ public class Logic_Core {
         // pawns
         for (int i = 0; i < 8; i++) {
             piece whitePawn = new piece(pieceColor.white, pieceType.pawn,
-                    board[i][6], new pawn(), R.drawable.wpawn);
+                    board[i][6], new pawn(), R.drawable.whitepawn);
             whitePieces[i] = whitePawn;
             board[i][6].setPiece(whitePawn);
             piece blackPawn = new piece(pieceColor.black, pieceType.pawn,
-                    board[i][1], new pawn(), R.drawable.bpawn);
+                    board[i][1], new pawn(), R.drawable.blackpawn);
             blackPieces[i] = blackPawn;
             board[i][1].setPiece(blackPawn);
         }
 
         // rooks
         whitePieces[8] = new piece(pieceColor.white, pieceType.rook,
-                board[0][7], new rook(), R.drawable.wrook);
+                board[0][7], new rook(), R.drawable.whiterook);
         board[0][7].setPiece(whitePieces[8]);
         whitePieces[9] = new piece(pieceColor.white, pieceType.rook,
-                board[7][7], new rook(), R.drawable.wrook);
+                board[7][7], new rook(), R.drawable.whiterook);
         board[7][7].setPiece(whitePieces[9]);
         blackPieces[8] = new piece(pieceColor.black, pieceType.rook,
-                board[0][0], new rook(), R.drawable.brook);
+                board[0][0], new rook(), R.drawable.blackrook);
         board[0][0].setPiece(blackPieces[8]);
         blackPieces[9] = new piece(pieceColor.black, pieceType.rook,
-                board[7][0], new rook(), R.drawable.brook);
+                board[7][0], new rook(), R.drawable.blackrook);
         board[7][0].setPiece(blackPieces[9]);
         // knights
         whitePieces[10] = new piece(pieceColor.white, pieceType.knight,
-                board[1][7], new knight(), R.drawable.wknight);
+                board[1][7], new knight(), R.drawable.whitehorse);
         board[1][7].setPiece(whitePieces[10]);
         whitePieces[11] = new piece(pieceColor.white, pieceType.knight,
-                board[6][7], new knight(), R.drawable.wknight);
+                board[6][7], new knight(), R.drawable.whitehorse);
         board[6][7].setPiece(whitePieces[11]);
         blackPieces[10] = new piece(pieceColor.black, pieceType.knight,
-                board[1][0], new knight(), R.drawable.bknight);
+                board[1][0], new knight(), R.drawable.blackknight);
         board[1][0].setPiece(blackPieces[10]);
         blackPieces[11] = new piece(pieceColor.black, pieceType.knight,
-                board[6][0], new knight(), R.drawable.bknight);
+                board[6][0], new knight(), R.drawable.blackknight);
         board[6][0].setPiece(blackPieces[11]);
         // bishops
         whitePieces[12] = new piece(pieceColor.white, pieceType.bishop,
-                board[2][7], new bishop(), R.drawable.wbishop);
+                board[2][7], new bishop(), R.drawable.whitebishop);
         board[2][7].setPiece(whitePieces[12]);
         whitePieces[13] = new piece(pieceColor.white, pieceType.bishop,
-                board[5][7], new bishop(), R.drawable.wbishop);
+                board[5][7], new bishop(), R.drawable.whitebishop);
         board[5][7].setPiece(whitePieces[13]);
         blackPieces[12] = new piece(pieceColor.black, pieceType.bishop,
-                board[2][0], new bishop(), R.drawable.bbishop);
+                board[2][0], new bishop(), R.drawable.blackbishop);
         board[2][0].setPiece(blackPieces[12]);
         blackPieces[13] = new piece(pieceColor.black, pieceType.bishop,
-                board[5][0], new bishop(), R.drawable.bbishop);
+                board[5][0], new bishop(), R.drawable.blackbishop);
         board[5][0].setPiece(blackPieces[13]);
         // queens
         whitePieces[14] = new piece(pieceColor.white, pieceType.queen,
-                board[3][7], new queen(), R.drawable.wqueen);
+                board[3][7], new queen(), R.drawable.whitequeen);
         board[3][7].setPiece(whitePieces[14]);
         blackPieces[14] = new piece(pieceColor.black, pieceType.queen,
-                board[3][0], new queen(), R.drawable.bqueen);
+                board[3][0], new queen(), R.drawable.blackqueen);
         board[3][0].setPiece(blackPieces[14]);
         // kings
         whitePieces[15] = new piece(pieceColor.white, pieceType.king,
-                board[4][7], new king(), R.drawable.wking);
+                board[4][7], new king(), R.drawable.whiteking);
         board[4][7].setPiece(whitePieces[15]);
         blackPieces[15] = new piece(pieceColor.black, pieceType.king,
-                board[4][0], new king(), R.drawable.bking);
+                board[4][0], new king(), R.drawable.blackking);
         board[4][0].setPiece(blackPieces[15]);
 
         white = new player(pieceColor.white, whitePieces);

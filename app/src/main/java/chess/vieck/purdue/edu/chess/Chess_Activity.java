@@ -2,9 +2,13 @@ package chess.vieck.purdue.edu.chess;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.Toast;
 
 
 public class Chess_Activity extends ActionBarActivity {
@@ -13,19 +17,22 @@ public class Chess_Activity extends ActionBarActivity {
 
     private String user;
 
-    public void createUser(View view) {
-        setContentView(view);
-        board.requestFocus();
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        board = new Board_Adapter(this);
-        logic = new Logic_Core();
-        board.setLogicEngine(logic);
-        setContentView(board);
+        setContentView(R.layout.chessboard);
+        GridView gridView = (GridView) findViewById(R.id.chessboard);
+        gridView.setAdapter(new Board_Adapter(this));
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+                Toast.makeText(Chess_Activity.this, "" + position,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+        //logic = new Logic_Core();
+        //board.setLogicEngine(logic);
+       // setContentView(board);
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {

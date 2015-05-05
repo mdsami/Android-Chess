@@ -4,7 +4,12 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 
 import java.util.ArrayList;
 
@@ -14,19 +19,26 @@ import chess.vieck.purdue.edu.chess.Logic_Core.piece;
 /**
  * Created by Michael on 4/10/2015.
  */
-public class Board_Adapter extends View {
+public class Board_Adapter extends BaseAdapter {
     boolean pieceSelected;
     boolean reset;
+    private Context context;
 
     private int fromX, fromY, toX, toY, topCorner, width;
     private Logic_Core logic;
     private Resources resources;
     private Canvas canvas;
-
+    private Integer[] boardSquares = new Integer[64];
     Board_Adapter(Context context) {
-        super(context);
-
-        pieceSelected = false;
+        this.context = context;
+        for(int i = 0; i < 64; i++){
+            if ((i % 2) == 0){
+                boardSquares[i] = R.drawable.blacksqr;
+            } else {
+                boardSquares[i] = R.drawable.whitesqr;
+            }
+        }
+        /*pieceSelected = false;
         reset = true;
         fromX = -1;
         fromY = -1;
@@ -36,7 +48,13 @@ public class Board_Adapter extends View {
 
         setFocusable(true);
         setFocusableInTouchMode(true);
+        */
     }
+
+    protected Integer squareImage(int position){
+        return boardSquares[position];
+    }
+
 
     public void setLogicEngine(Logic_Core logic) {
         if (logic != null) {
@@ -52,8 +70,8 @@ public class Board_Adapter extends View {
         return y * width / 8 + topCorner;
     }
 
-    private void drawBoard(Logic_Core.cell[][] board) {
-        super.invalidate();
+    /*private void drawBoard(Logic_Core.cell[][] board) {
+        //super.invalidate();
         Drawable boardImg = resources.getDrawable(R.drawable.board);
         width = canvas.getWidth();
         topCorner = (int) (canvas.getHeight() - width) / 2;
@@ -69,11 +87,12 @@ public class Board_Adapter extends View {
                 }
             }
         }
-    }
+    }*/
 
-    private void drawAvailableMoves(cell[][] board, int x, int y) {
+    /*private void drawAvailableMoves(cell[][] board, int x, int y) {
         piece piece = board[x][y].getPiece();
         if (piece != null && piece.getPieceColour() == logic.getTurn()) {
+            Log.d("DEBUG", "Piece selected");
             Drawable selection = resources.getDrawable(R.drawable.selected);
             selection.setBounds(getBoardXCoor(x), getBoardYCoor(y), getBoardXCoor(x) + width / 8, getBoardYCoor(y) + width / 8);
             selection.draw(canvas);
@@ -88,16 +107,60 @@ public class Board_Adapter extends View {
                 }
             }
         }
-    }
+    }*/
 
     // Draw Chess board and set up logic connections
     // TODO: probably not here. Set up to and from cell selection
     // this may be related to view available moves.
-    @Override
+    /*@Override
     protected void onDraw(Canvas canvas) {
         this.canvas = canvas;
         this.drawBoard(logic.getBoard());
         if (pieceSelected)
             drawAvailableMoves(logic.getBoard(), fromX, fromY);
+    }
+    */
+
+    @Override
+    public int getCount() {
+        return boardSquares.length;
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return 0;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View squareContainerView = convertView;
+
+        if ( convertView == null ) {
+            //Inflate the layout
+            final LayoutInflater layoutInflater =
+                    LayoutInflater.from(this.context);
+            squareContainerView =
+                    layoutInflater.inflate(R.layout.square, null);
+
+            // Background
+            final ImageView squareView =
+                    (ImageView)squareContainerView.findViewById(R.id.square_background);
+            Log.d("DEBUG_TAG",""+position);
+            squareView.setImageResource(this.squareImage((position + position/8)%2));
+
+            /*if (pPosition % 2 == 0) { //mock test
+                // Add The piece
+                final ImageView pieceView =
+                        (ImageView)squareContainerView.findViewById(R.id.piece);
+                pieceView.setImageResource(R.drawable.blackpawn);
+                pieceView.setTag(position);
+            }*/
+        }
+        return squareContainerView;
     }
 }
