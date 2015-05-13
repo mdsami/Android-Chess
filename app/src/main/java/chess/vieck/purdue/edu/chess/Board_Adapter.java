@@ -3,18 +3,11 @@ package chess.vieck.purdue.edu.chess;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-
-import java.util.ArrayList;
-
-import chess.vieck.purdue.edu.chess.Logic_Core.cell;
-import chess.vieck.purdue.edu.chess.Logic_Core.piece;
 
 /**
  * Created by Michael on 4/10/2015.
@@ -38,17 +31,16 @@ public class Board_Adapter extends BaseAdapter {
                 boardSquares[i] = R.drawable.whitesqr;
             }
         }
-        /*pieceSelected = false;
+        pieceSelected = false;
         reset = true;
         fromX = -1;
         fromY = -1;
         toX = -1;
         toY = -1;
-        resources = getResources();
+        //resources = getResources();
 
-        setFocusable(true);
-        setFocusableInTouchMode(true);
-        */
+        //setFocusable(true);
+        //setFocusableInTouchMode(true);
     }
 
     protected Integer squareImage(int position){
@@ -150,16 +142,38 @@ public class Board_Adapter extends BaseAdapter {
             // Background
             final ImageView squareView =
                     (ImageView)squareContainerView.findViewById(R.id.square_background);
-            Log.d("DEBUG_TAG",""+position);
             squareView.setImageResource(this.squareImage((position + position/8)%2));
 
-            /*if (pPosition % 2 == 0) { //mock test
                 // Add The piece
                 final ImageView pieceView =
                         (ImageView)squareContainerView.findViewById(R.id.piece);
+            if ((position >= 47 && position <= 55)) {
                 pieceView.setImageResource(R.drawable.blackpawn);
                 pieceView.setTag(position);
-            }*/
+            } else if (position >= 8 && position <= 15) {
+                pieceView.setImageResource(R.drawable.whitepawn);
+                pieceView.setTag(position);
+            } else if (position == 0 || position == 7) {
+                pieceView.setImageResource(R.drawable.whiterook);
+            } else if (position == 56 || position == 63) {
+                pieceView.setImageResource(R.drawable.blackrook);
+            } else if (position == 1 || position == 6) {
+                pieceView.setImageResource(R.drawable.whitehorse);
+            } else if (position == 57 || position == 62) {
+                pieceView.setImageResource(R.drawable.blackknight);
+            } else if (position == 2 || position == 5) {
+                pieceView.setImageResource(R.drawable.whitebishop);
+            } else if (position == 58 || position == 61) {
+                pieceView.setImageResource(R.drawable.blackbishop);
+            } else if (position == 3) {
+                pieceView.setImageResource(R.drawable.whitequeen);
+            } else if (position == 59) {
+                pieceView.setImageResource(R.drawable.blackqueen);
+            } else if (position == 4) {
+                pieceView.setImageResource(R.drawable.whiteking);
+            } else if (position == 60) {
+                pieceView.setImageResource(R.drawable.blackking);
+            }
         }
         return squareContainerView;
     }
