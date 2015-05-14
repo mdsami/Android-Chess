@@ -1,12 +1,17 @@
 package chess.vieck.purdue.edu.chess;
 
+import android.content.ClipData;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.*;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 /**
@@ -14,18 +19,22 @@ import android.widget.ImageView;
  */
 public class Board_Adapter extends BaseAdapter {
     boolean pieceSelected;
-    boolean reset;
+    boolean reset = false;
     private Context context;
+   // Piece currentPiece = null;
 
     private int fromX, fromY, toX, toY, topCorner, width;
+    FrameLayout touchLayout;
+    ImageView touchImage;
     private Logic_Core logic;
     private Resources resources;
     private Canvas canvas;
     private Integer[] boardSquares = new Integer[64];
+
     Board_Adapter(Context context) {
         this.context = context;
-        for(int i = 0; i < 64; i++){
-            if ((i % 2) == 0){
+        for (int i = 0; i < 64; i++) {
+            if ((i % 2) == 0) {
                 boardSquares[i] = R.drawable.blacksqr;
             } else {
                 boardSquares[i] = R.drawable.whitesqr;
@@ -43,7 +52,7 @@ public class Board_Adapter extends BaseAdapter {
         //setFocusableInTouchMode(true);
     }
 
-    protected Integer squareImage(int position){
+    protected Integer squareImage(int position) {
         return boardSquares[position];
     }
 
@@ -132,7 +141,7 @@ public class Board_Adapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View squareContainerView = convertView;
 
-        if ( convertView == null ) {
+        if (convertView == null) {
             //Inflate the layout
             final LayoutInflater layoutInflater =
                     LayoutInflater.from(this.context);
@@ -141,40 +150,73 @@ public class Board_Adapter extends BaseAdapter {
 
             // Background
             final ImageView squareView =
-                    (ImageView)squareContainerView.findViewById(R.id.square_background);
-            squareView.setImageResource(this.squareImage((position + position/8)%2));
+                    (ImageView) squareContainerView.findViewById(R.id.square_background);
+            squareView.setImageResource(this.squareImage((position + position / 8) % 2));
 
-                // Add The piece
-                final ImageView pieceView =
-                        (ImageView)squareContainerView.findViewById(R.id.piece);
-            if ((position >= 47 && position <= 55)) {
-                pieceView.setImageResource(R.drawable.blackpawn);
-                pieceView.setTag(position);
-            } else if (position >= 8 && position <= 15) {
-                pieceView.setImageResource(R.drawable.whitepawn);
-                pieceView.setTag(position);
-            } else if (position == 0 || position == 7) {
-                pieceView.setImageResource(R.drawable.whiterook);
-            } else if (position == 56 || position == 63) {
-                pieceView.setImageResource(R.drawable.blackrook);
-            } else if (position == 1 || position == 6) {
-                pieceView.setImageResource(R.drawable.whitehorse);
-            } else if (position == 57 || position == 62) {
-                pieceView.setImageResource(R.drawable.blackknight);
-            } else if (position == 2 || position == 5) {
-                pieceView.setImageResource(R.drawable.whitebishop);
-            } else if (position == 58 || position == 61) {
-                pieceView.setImageResource(R.drawable.blackbishop);
-            } else if (position == 3) {
-                pieceView.setImageResource(R.drawable.whitequeen);
-            } else if (position == 59) {
-                pieceView.setImageResource(R.drawable.blackqueen);
-            } else if (position == 4) {
-                pieceView.setImageResource(R.drawable.whiteking);
-            } else if (position == 60) {
-                pieceView.setImageResource(R.drawable.blackking);
+            // Add The piece
+            final ImageView pieceView =
+                    (ImageView) squareContainerView.findViewById(R.id.piece);
+            if (reset) {
+                if ((position >= 47 && position <= 55)) {
+                    pieceView.setImageResource(R.drawable.blackpawn);
+                    pieceView.setTag(position);
+                } else if (position >= 8 && position <= 15) {
+                    pieceView.setImageResource(R.drawable.whitepawn);
+                    pieceView.setTag(position);
+                } else if (position == 0 || position == 7) {
+                    pieceView.setImageResource(R.drawable.whiterook);
+                } else if (position == 56 || position == 63) {
+                    pieceView.setImageResource(R.drawable.blackrook);
+                } else if (position == 1 || position == 6) {
+                    pieceView.setImageResource(R.drawable.whitehorse);
+                } else if (position == 57 || position == 62) {
+                    pieceView.setImageResource(R.drawable.blackknight);
+                } else if (position == 2 || position == 5) {
+                    pieceView.setImageResource(R.drawable.whitebishop);
+                } else if (position == 58 || position == 61) {
+                    pieceView.setImageResource(R.drawable.blackbishop);
+                } else if (position == 3) {
+                    pieceView.setImageResource(R.drawable.whitequeen);
+                } else if (position == 59) {
+                    pieceView.setImageResource(R.drawable.blackqueen);
+                } else if (position == 4) {
+                    pieceView.setImageResource(R.drawable.whiteking);
+                } else if (position == 60) {
+                    pieceView.setImageResource(R.drawable.blackking);
+                }
             }
         }
         return squareContainerView;
+    }
+
+    private final class ListenForTouch implements OnTouchListener {
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN){
+                ClipData clipData = ClipData.newPlainText("", "");
+                DragShadowBuilder shadowBuilder = new DragShadowBuilder(v);
+                v.startDrag(clipData, shadowBuilder,v, 0);
+                v.setVisibility(View.INVISIBLE);
+                touchLayout = (FrameLayout) v.getParent();
+                touchImage = (ImageView) touchLayout.getChildAt(1);
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    private final class ListenForDrag implements OnDragListener {
+        @Override
+        public boolean onDrag(View v, DragEvent event) {
+            int action = event.getAction();
+            if (action == DragEvent.ACTION_DROP) {
+                FrameLayout square = (FrameLayout) v.getParent();
+                ImageView imageView = (ImageView) square.getChildAt(1);
+            }
+            return true;
+        }
     }
 }
