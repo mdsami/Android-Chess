@@ -2,7 +2,6 @@ package chess.vieck.purdue.edu.chess;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,7 +11,7 @@ import android.widget.Toast;
 
 
 public class Chess_Activity extends ActionBarActivity {
-    private Logic_Core logic;
+    private Core core;
     private Board_Adapter board;
 
     private String user;
@@ -20,7 +19,6 @@ public class Chess_Activity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.chessboard);
         GridView gridView = (GridView) findViewById(R.id.chessboard);
         gridView.setAdapter(new Board_Adapter(this));
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -30,7 +28,10 @@ public class Chess_Activity extends ActionBarActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
-        //logic = new Logic_Core();
+        core = new Core();
+        board.setCore(core);
+        setContentView(R.layout.chessboard);
+        //logic = new Core();
         //board.setLogicEngine(logic);
        // setContentView(board);
     }

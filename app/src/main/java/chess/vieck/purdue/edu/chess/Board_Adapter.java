@@ -2,13 +2,14 @@ package chess.vieck.purdue.edu.chess;
 
 import android.content.ClipData;
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Canvas;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.*;
+import android.view.View.DragShadowBuilder;
+import android.view.View.OnDragListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
@@ -19,25 +20,35 @@ import android.widget.ImageView;
  */
 public class Board_Adapter extends BaseAdapter {
     boolean pieceSelected;
-    boolean reset = false;
+    boolean reset;
+    private int fromX, fromY, toX, toY, topCorner, width;
+
     private Context context;
    // Piece currentPiece = null;
 
-    private int fromX, fromY, toX, toY, topCorner, width;
+
     FrameLayout touchLayout;
     ImageView touchImage;
-    private Logic_Core logic;
+    private Core core;
+    /* Unused
     private Resources resources;
     private Canvas canvas;
+    */
     private Integer[] boardSquares = new Integer[64];
+
+    public void setCore(Core core){
+        if (core != null) {
+            this.core = core;
+        }
+    }
 
     Board_Adapter(Context context) {
         this.context = context;
         for (int i = 0; i < 64; i++) {
             if ((i % 2) == 0) {
-                boardSquares[i] = R.drawable.blacksqr;
+                boardSquares[i] = R.drawable.blacksquare;
             } else {
-                boardSquares[i] = R.drawable.whitesqr;
+                boardSquares[i] = R.drawable.whitesquare;
             }
         }
         pieceSelected = false;
@@ -57,9 +68,9 @@ public class Board_Adapter extends BaseAdapter {
     }
 
 
-    public void setLogicEngine(Logic_Core logic) {
+    public void setLogicEngine(Core logic) {
         if (logic != null) {
-            this.logic = logic;
+            this.core = logic;
         }
     }
 
@@ -70,57 +81,6 @@ public class Board_Adapter extends BaseAdapter {
     private int getBoardYCoor(int y) {
         return y * width / 8 + topCorner;
     }
-
-    /*private void drawBoard(Logic_Core.cell[][] board) {
-        //super.invalidate();
-        Drawable boardImg = resources.getDrawable(R.drawable.board);
-        width = canvas.getWidth();
-        topCorner = (int) (canvas.getHeight() - width) / 2;
-        boardImg.setBounds(0, topCorner, width, width + topCorner);
-        boardImg.draw(canvas);
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                Logic_Core.piece piece = board[x][y].getPiece();
-                if (piece != null) {
-                    Drawable figure = resources.getDrawable(piece.getImageResource());
-                    figure.setBounds(getBoardXCoor(x), getBoardYCoor(y), getBoardXCoor(x) + width / 8, getBoardYCoor(y) + width / 8);
-                    figure.draw(canvas);
-                }
-            }
-        }
-    }*/
-
-    /*private void drawAvailableMoves(cell[][] board, int x, int y) {
-        piece piece = board[x][y].getPiece();
-        if (piece != null && piece.getPieceColour() == logic.getTurn()) {
-            Log.d("DEBUG", "Piece selected");
-            Drawable selection = resources.getDrawable(R.drawable.selected);
-            selection.setBounds(getBoardXCoor(x), getBoardYCoor(y), getBoardXCoor(x) + width / 8, getBoardYCoor(y) + width / 8);
-            selection.draw(canvas);
-
-            ArrayList<cell> availMoves = piece.getAvailableMoves();
-            for (int i = 0; i < availMoves.size(); i++) {
-                if (piece.isValidMove(availMoves.get(i))) {
-                    cell availMove = availMoves.get(i);
-                    Drawable circle = resources.getDrawable(R.drawable.selectioncircle);
-                    circle.setBounds(getBoardXCoor(availMove.getX()), getBoardYCoor(availMove.getY()), getBoardXCoor(availMove.getX()) + width / 8, getBoardYCoor(availMove.getY()) + width / 8);
-                    circle.draw(canvas);
-                }
-            }
-        }
-    }*/
-
-    // Draw Chess board and set up logic connections
-    // TODO: probably not here. Set up to and from cell selection
-    // this may be related to view available moves.
-    /*@Override
-    protected void onDraw(Canvas canvas) {
-        this.canvas = canvas;
-        this.drawBoard(logic.getBoard());
-        if (pieceSelected)
-            drawAvailableMoves(logic.getBoard(), fromX, fromY);
-    }
-    */
 
     @Override
     public int getCount() {
@@ -153,36 +113,36 @@ public class Board_Adapter extends BaseAdapter {
                     (ImageView) squareContainerView.findViewById(R.id.square_background);
             squareView.setImageResource(this.squareImage((position + position / 8) % 2));
 
-            // Add The piece
+            // Add The Piece
             final ImageView pieceView =
                     (ImageView) squareContainerView.findViewById(R.id.piece);
             if (reset) {
-                if ((position >= 47 && position <= 55)) {
-                    pieceView.setImageResource(R.drawable.blackpawn);
+                if ((position >= 48 && position <= 55)) {
+                    pieceView.setImageResource(R.drawable.bpawn);
                     pieceView.setTag(position);
                 } else if (position >= 8 && position <= 15) {
-                    pieceView.setImageResource(R.drawable.whitepawn);
+                    pieceView.setImageResource(R.drawable.wpawn);
                     pieceView.setTag(position);
                 } else if (position == 0 || position == 7) {
-                    pieceView.setImageResource(R.drawable.whiterook);
+                    pieceView.setImageResource(R.drawable.wrook);
                 } else if (position == 56 || position == 63) {
-                    pieceView.setImageResource(R.drawable.blackrook);
+                    pieceView.setImageResource(R.drawable.brook);
                 } else if (position == 1 || position == 6) {
-                    pieceView.setImageResource(R.drawable.whitehorse);
+                    pieceView.setImageResource(R.drawable.wknight);
                 } else if (position == 57 || position == 62) {
-                    pieceView.setImageResource(R.drawable.blackknight);
+                    pieceView.setImageResource(R.drawable.bknight);
                 } else if (position == 2 || position == 5) {
-                    pieceView.setImageResource(R.drawable.whitebishop);
+                    pieceView.setImageResource(R.drawable.wbishop);
                 } else if (position == 58 || position == 61) {
-                    pieceView.setImageResource(R.drawable.blackbishop);
+                    pieceView.setImageResource(R.drawable.bbishop);
                 } else if (position == 3) {
-                    pieceView.setImageResource(R.drawable.whitequeen);
+                    pieceView.setImageResource(R.drawable.wqueen);
                 } else if (position == 59) {
-                    pieceView.setImageResource(R.drawable.blackqueen);
+                    pieceView.setImageResource(R.drawable.bqueen);
                 } else if (position == 4) {
-                    pieceView.setImageResource(R.drawable.whiteking);
+                    pieceView.setImageResource(R.drawable.wking);
                 } else if (position == 60) {
-                    pieceView.setImageResource(R.drawable.blackking);
+                    pieceView.setImageResource(R.drawable.bking);
                 }
             }
         }
@@ -200,7 +160,7 @@ public class Board_Adapter extends BaseAdapter {
                 v.setVisibility(View.INVISIBLE);
                 touchLayout = (FrameLayout) v.getParent();
                 touchImage = (ImageView) touchLayout.getChildAt(1);
-
+                Log.d("Debug","Screen touched");
                 return true;
             } else {
                 return false;
