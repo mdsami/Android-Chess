@@ -13,39 +13,32 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 /**
  * Created by Michael on 4/10/2015.
  */
 public class Board_Adapter extends BaseAdapter {
-    boolean pieceSelected;
-    boolean reset;
-    private int fromX, fromY, toX, toY, topCorner, width;
-
-    private Context context;
-    // Piece currentPiece = null;
-
-
-    FrameLayout touchLayout;
-    ImageView touchImage;
-    Core.Piece piece;
-    private Core core;
-    private Core.Piece[] pieces;
     /* Unused
     private Resources resources;
     private Canvas canvas;
     */
-    private Integer[] boardSquares = new Integer[64];
-    private Integer[] boardPieces = new Integer[64];
-
-    public void setCore(Core core) {
-        if (core != null) {
-            this.core = core;
-        }
-    }
+    public Integer[] boardSquares;
+    public Core.Piece[] pieceArray = new Core.Piece[64];
+    boolean pieceSelected;
+    boolean reset;
+    // Piece currentPiece = null;
+    FrameLayout touchLayout;
+    ImageView touchImage;
+    Core.Piece piece;
+    private int fromX, fromY, toX, toY, topCorner, width;
+    private Context context;
+    private Core core;
 
     Board_Adapter(Context context) {
         this.context = context;
+        boardSquares = new Integer[64];
+        pieceArray = new Core.Piece[64];
         for (int i = 0; i < 64; i++) {
             if ((i % 2) == 0) {
                 boardSquares[i] = R.drawable.blacksquare;
@@ -53,31 +46,33 @@ public class Board_Adapter extends BaseAdapter {
                 boardSquares[i] = R.drawable.whitesquare;
             }
         }
-        for (int i = 0; i < 64; i++){
+        for (int i = 0; i < 64; i++) {
+
             if ((i >= 48 && i <= 55)) {
-                boardPieces[i] = R.drawable.bpawn;
+                pieceArray[i] = new Core.Piece(Core.objectColour.white, Core.pieceType.rook, i, new Core.Pawn, );
+                pieceArray[i].setImageResource(R.drawable.bpawn);
             } else if (i >= 8 && i <= 15) {
-                boardPieces[i] = R.drawable.wpawn;
+                pieceArray[i].setImageResource(R.drawable.wpawn);
             } else if (i == 0 || i == 7) {
-                boardPieces[i] = R.drawable.wrook;
+                pieceArray[i].setImageResource(R.drawable.wrook);
             } else if (i == 56 || i == 63) {
-                boardPieces[i] = R.drawable.brook;
+                pieceArray[i].setImageResource(R.drawable.brook);
             } else if (i == 1 || i == 6) {
-                boardPieces[i] = R.drawable.wknight;
+                pieceArray[i].setImageResource(R.drawable.wknight);
             } else if (i == 57 || i == 62) {
-                boardPieces[i] = R.drawable.bknight;
+                pieceArray[i].setImageResource(R.drawable.bknight);
             } else if (i == 2 || i == 5) {
-                boardPieces[i] = R.drawable.wbishop;
+                pieceArray[i].setImageResource(R.drawable.wbishop);
             } else if (i == 58 || i == 61) {
-                boardPieces[i] = R.drawable.bbishop;
+                pieceArray[i].setImageResource(R.drawable.bbishop);
             } else if (i == 3) {
-                boardPieces[i] = R.drawable.wqueen;
+                pieceArray[i].setImageResource(R.drawable.wqueen);
             } else if (i == 59) {
-                boardPieces[i] = R.drawable.bqueen;
+                pieceArray[i].setImageResource(R.drawable.bqueen);
             } else if (i == 4) {
-                boardPieces[i] = R.drawable.wking;
+                pieceArray[i].setImageResource(R.drawable.wking);
             } else if (i == 60) {
-                boardPieces[i] = R.drawable.bking;
+                pieceArray[i].setImageResource(R.drawable.bking);
             }
         }
         pieceSelected = false;
@@ -88,17 +83,18 @@ public class Board_Adapter extends BaseAdapter {
         toY = -1;
     }
 
-    static class ViewHolder {
-        public ImageView square;
-        public ImageView piece;
+    public void setCore(Core core) {
+        if (core != null) {
+            this.core = core;
+        }
     }
 
     protected Integer squareImage(int position) {
         return boardSquares[position];
     }
 
-    protected Integer pieceImage(int position){
-           return boardPieces[position];
+    protected Integer pieceImage(int position) {
+        return pieceArray[position].getImageResource();
     }
 
     private int getBoardXCoor(int x) {
@@ -128,27 +124,34 @@ public class Board_Adapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View squareContainerView = convertView;
 
-        if (convertView == null || reset) {
+        if (convertView == null || !reset) {
             //Inflate the layout
             final LayoutInflater layoutInflater = LayoutInflater.from(this.context);
             squareContainerView = layoutInflater.inflate(R.layout.square, null);
 
             // Background
-            ViewHolder viewHolder =  new ViewHolder();
+            ViewHolder viewHolder = new ViewHolder();
             viewHolder.square = (ImageView) squareContainerView.findViewById(R.id.square);
-            viewHolder.square.setImageResource(squareImage(position));
+            viewHolder.square.setImageResource(squareImage((position + position / 8) % 2));
             viewHolder.piece = (ImageView) squareContainerView.findViewById(R.id.Piece);
-            //Log.d("Debug", "Position:" + position + " and piece:" + pieceImage(position));
             if (this.pieceImage(position) != null) {
                 viewHolder.piece.setImageResource(pieceImage(position));
                 viewHolder.piece.setOnTouchListener(new ListenForTouch());
                 viewHolder.square.setOnDragListener(new ListenForDrag());
+            } else {
+                Toast.makeText(context, "No Piece",
+                        Toast.LENGTH_SHORT).show();
             }
             squareContainerView.setTag(viewHolder);
         }
-        ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag(pieceImage(position));
-        viewHolder.piece.setTag(boardPieces[position]);
+        // ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag(pieceImage(position));
+        // viewHolder.piece.setTag(boardPieces[position]);
         return squareContainerView;
+    }
+
+    static class ViewHolder {
+        public ImageView square;
+        public ImageView piece;
     }
 
     private final class ListenForTouch implements OnTouchListener {
@@ -180,7 +183,9 @@ public class Board_Adapter extends BaseAdapter {
                 square = (FrameLayout) v.getParent();
                 board = (ImageView) square.getChildAt(1);
                 Core.Piece pieceAtSquare = (Core.Piece) board.getTag();
-               // if ()
+                if (piece.getAvailableMoves().contains(pieceAtSquare.getLocation())) {
+
+                }
             }
             return true;
         }
