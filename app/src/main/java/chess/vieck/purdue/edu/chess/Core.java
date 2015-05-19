@@ -457,27 +457,27 @@ protected enum moveStatus {
             // direction boolean deciding addition + subtraction, but
             // i don't feel like dicking with it, so here are two
             // separate blocks of code.
-
+            //TODO: fix pieceArray and do not check for white and black, just opposite
             // as standard, white is on bottom, black on top
             // white moves 6 -> 0; black moves 1 -> 7
             if (piece.getPieceColour() == objectColour.white) {
                 // move forward one Cell
                 if (board[currX][currY - 1].getPiece() == null)
-                    retList.add(piece.location - 8);
+                    retList.add(piece.location + 8);
 
                 // check moving left
                 if (piece.location % 8 != 0
                         && board[currX - 1][currY - 1].getPiece() != null
                         && board[currX - 1][currY - 1].getPiece()
                         .getPieceColour() == objectColour.black)
-                    retList.add(piece.location - 9);
+                    retList.add(piece.location + 7);
 
                 // check moving right
                 if (currX < 7
                         && board[currX + 1][currY - 1].getPiece() != null
                         && board[currX + 1][currY - 1].getPiece()
                         .getPieceColour() == objectColour.black)
-                    retList.add(piece.location - 7);
+                    retList.add(piece.location + 9);
 
                 // default location, making 4 available moves, rather than 3
                 if (currY == 6 && board[currX][currY - 1].getPiece() == null
@@ -511,36 +511,35 @@ protected enum moveStatus {
     }
 
     protected class Bishop implements availableMoves {
-        public ArrayList<Integer> getAvailableMoves(Piece Piece) {
-            if (Piece.getLocation() == deadCell)
+        public ArrayList<Integer> getAvailableMoves(Piece piece) {
+            if (piece.getLocation() == deadCell)
                 return null;
-            ArrayList<Integer> retList = new ArrayList<Cell>();
-            int currX = Piece.getLocation().getX();
-            int currY = Piece.getLocation().getY();
+            ArrayList<Integer> retList = new ArrayList<>();
+            int currLocation = piece.getLocation();
             // set i to 1 because there's no point in checking whether
             // staying in place is a valid move. that's fucking stupid
             // even with colour checking
-            int i = 1;
-
+            int i = 0;
             // check the diagonal until you see a Piece.
-            // right, down
-            while ((currX + i < 8 && currY + i < 8)
-                    && (board[currX + i][currY + i].getPiece() == null || board[currX
-                    + i][currY + i].getPiece().getPieceColour() != Piece.getPieceColour())) {
+            // right, up
+            while ((currLocation + i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation < 64
+                    && pieceArray[currLocation + i].getPiece() == null || pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
                 // if the Piece is one of the opponent's, it is a valid move
-                if (board[currX + i][currY + i].getPiece() != null
-                        && board[currX + i][currY + i].getPiece().getPieceColour() != Piece.getPieceColour()) {
-                    retList.add(board[currX + i][currY + i]);
+                if (pieceArray[currLocation + i].getPiece() != null
+                        && pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
+                    retList.add(pieceArray[currLocation + i]);
                     break;
                 }
-                retList.add(board[currX + i][currY + i]);
-                i++;
+                retList.add(pieceArray[currLocation + i]);
+                i += 9;
+                count++;
+                row++;
             }
 
-            i = 1;
-            // right, up
-            while ((currX + i < 8 && currY - i > -1)
-                    && (board[currX + i][currY - i].getPiece() == null || board[currX
+            i = 0;
+            // right, down
+            while ((currLocation - i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation > -1
+                    && (pieceArray[currLocation - i].getPiece() == null || board[currX
                     + i][currY - i].getPiece().getPieceColour() != Piece.getPieceColour())) {
                 if (board[currX + i][currY - i].getPiece() != null
                         && board[currX + i][currY - i].getPiece().getPieceColour() != Piece.getPieceColour()) {
@@ -548,7 +547,7 @@ protected enum moveStatus {
                     break;
                 }
                 retList.add(board[currX + i][currY - i]);
-                i++;
+                i += 9;
             }
 
             i = 1;
@@ -644,7 +643,7 @@ protected enum moveStatus {
     }
 
     protected class Rook implements availableMoves {
-        public ArrayList<Cell> getAvailableMoves(Piece Piece) {
+        public ArrayList<Integer> getAvailableMoves(Piece Piece) {
             if (Piece.getLocation() == deadCell)
                 return null;
             ArrayList<Cell> retList = new ArrayList<Cell>();
