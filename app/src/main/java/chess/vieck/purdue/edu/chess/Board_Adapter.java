@@ -15,6 +15,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import chess.vieck.purdue.edu.chess.Core.Pawn;
+import chess.vieck.purdue.edu.chess.Core.Piece;
+import chess.vieck.purdue.edu.chess.Core.objectColour;
+import chess.vieck.purdue.edu.chess.Core.pieceType;
+
 /**
  * Created by Michael on 4/10/2015.
  */
@@ -24,21 +29,22 @@ public class Board_Adapter extends BaseAdapter {
     private Canvas canvas;
     */
     public Integer[] boardSquares;
-    public Core.Piece[] pieceArray = new Core.Piece[64];
+    public Piece[] pieceArray = new Piece[64];
     boolean pieceSelected;
     boolean reset;
     // Piece currentPiece = null;
     FrameLayout touchLayout;
     ImageView touchImage;
-    Core.Piece piece;
+    Piece piece;
     private int fromX, fromY, toX, toY, topCorner, width;
     private Context context;
     private Core core;
 
     Board_Adapter(Context context) {
+        core = new Core();
         this.context = context;
         boardSquares = new Integer[64];
-        pieceArray = new Core.Piece[64];
+        pieceArray = new Piece[64];
         for (int i = 0; i < 64; i++) {
             if ((i % 2) == 0) {
                 boardSquares[i] = R.drawable.blacksquare;
@@ -49,7 +55,7 @@ public class Board_Adapter extends BaseAdapter {
         for (int i = 0; i < 64; i++) {
 
             if ((i >= 48 && i <= 55)) {
-                pieceArray[i] = new Core.Piece(Core.objectColour.white, Core.pieceType.rook, i, new Core.Pawn, );
+                pieceArray[i] = new Piece(objectColour.white, pieceType.rook, i, new Pawn, );
                 pieceArray[i].setImageResource(R.drawable.bpawn);
             } else if (i >= 8 && i <= 15) {
                 pieceArray[i].setImageResource(R.drawable.wpawn);
@@ -87,6 +93,10 @@ public class Board_Adapter extends BaseAdapter {
         if (core != null) {
             this.core = core;
         }
+    }
+
+    public Piece[] getPieceArray() {
+        return pieceArray;
     }
 
     protected Integer squareImage(int position) {
@@ -182,7 +192,7 @@ public class Board_Adapter extends BaseAdapter {
             if (action == DragEvent.ACTION_DROP) {
                 square = (FrameLayout) v.getParent();
                 board = (ImageView) square.getChildAt(1);
-                Core.Piece pieceAtSquare = (Core.Piece) board.getTag();
+                Core.Piece pieceAtSquare = (Piece) board.getTag();
                 if (piece.getAvailableMoves().contains(pieceAtSquare.getLocation())) {
 
                 }
