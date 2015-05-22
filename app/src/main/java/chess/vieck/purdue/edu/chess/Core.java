@@ -6,19 +6,19 @@ import java.util.ArrayList;
  * Created by Michael on 5/2/2015.
  */
 public class Core {
-    protected Piece[] pieceArray;
+    protected static Piece[] pieceArray;
     ;
     // this gets used for discarded Pieces
-    private int deadCell;
+    private static int deadCell;
     ;
-    private Player white, black;
+    private static Player white, black;
     ;
-    private objectColour turn;
+    private static objectColour turn;
     ;
-    private gameState currentGameState;
+    private static gameState currentGameState;
 
     // .ctor
-    Core() {
+    public Core() {
         // if new game
         deadCell = -1;
         populateBoard(pieceArray);
@@ -35,7 +35,7 @@ public class Core {
     }
 
     // checks for check on proposed board.
-    private gameState checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
+    private static gameState checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
         Piece own[];
         Piece opponent[];
         if (whoseCheck == objectColour.white) {
@@ -51,8 +51,7 @@ public class Core {
         for (int i = 0; i < 15; i++) {
             ArrayList<Integer> moves = opponent[i].getAvailableMoves();
             if (moves != null
-                    && (!moves.isEmpty() && moves.contains(own[15].getLocation())))
-            {
+                    && (!moves.isEmpty() && moves.contains(own[15].getLocation()))) {
                 if (whoseCheck == objectColour.white)
                     return gameState.whiteCheck;
                 else
@@ -102,8 +101,8 @@ public class Core {
     public boolean move(int oldLocation, int newLocation)
             throws Exception {
         Player currentPlayer = turn == objectColour.white ? white : black;
-        Piece piece = pieceArray[oldLocation].getPiece();
-        boolean success = currentPlayer.move(piece, pieceArray[newLocation]);
+        Piece piece = pieceArray[oldLocation];
+        boolean success = currentPlayer.move(piece, newLocation);
         if (success)
             turn = turn == objectColour.white ? objectColour.black
                     : objectColour.white;
@@ -111,8 +110,8 @@ public class Core {
     }
 
     // TODO: finish this function.
-    void populateBoard(Integer[] board) {
-
+    void populateBoard(Piece[] board) {
+/*
         // White is on the bottom, black is on top
         // pawns
         for (int i = 0; i < 8; i++) {
@@ -181,36 +180,34 @@ public class Core {
         board[4][0].setPiece(blackPieces[15]);
 
         white = new Player(objectColour.white, whitePieces);
-        black = new Player(objectColour.black, blackPieces);
+        black = new Player(objectColour.black, blackPieces);*/
     }
 
-protected enum pieceType {
-    pawn, bishop, knight, rook, queen, king
+    protected enum pieceType {
+        pawn, bishop, knight, rook, queen, king
     }
 
-protected enum objectColour {
-    black, white
+    protected enum objectColour {
+        black, white
     }
 
-protected enum pieceState {
-    alive, dead
+    protected enum pieceState {
+        alive, dead
     }
 
-protected enum gameState {
-    allClear, whiteCheck, whiteMate, blackCheck, blackMate, stalemate
+    protected enum gameState {
+        allClear, whiteCheck, whiteMate, blackCheck, blackMate, stalemate
     }
 
-protected enum moveStatus {
-    success, fail, promote
+    protected enum moveStatus {
+        success, fail, promote
     }
-
-    // MEMBER VARIABLES
 
     private interface availableMoves {
         public ArrayList<Integer> getAvailableMoves(Piece Piece);
     }
 
-    private class Player {
+    private static class Player {
         // properties
         private objectColour colour;
         private Piece[] Pieces;
@@ -282,7 +279,7 @@ protected enum moveStatus {
         }
     }
 
-    public class incompatiblePieceTypeConversionException extends Exception {
+    public static class incompatiblePieceTypeConversionException extends Exception {
         private static final long serialVersionUID = 1L;
 
         public incompatiblePieceTypeConversionException(String string) {
@@ -290,7 +287,7 @@ protected enum moveStatus {
         }
     }
 
-    public class Piece {
+    public static class Piece {
 
 
         // colour of the Piece
@@ -381,24 +378,24 @@ protected enum moveStatus {
 
         public boolean isValidMove(int toLocation) {
             int fromLocation = this.getLocation();
-            Piece oldPiece = pieceArray[fromLocation].getPiece();
-            Piece newPiece = pieceArray[toLocation].getPiece();
+            Piece oldPiece = pieceArray[fromLocation];
+            Piece newPiece = pieceArray[toLocation];
 
             if (newPiece != null)
                 if (newPiece.getPieceColour() == this.colour)
                     return false;
 
 
-            newPiece.setPiece(this);
-            oldPiece.setPiece(null);
+            newPiece = oldPiece;
+            oldPiece = null;
             this.location = toLocation;
             this.setPieceState(pieceState.alive);
 
             gameState tryState = checkForCheck(pieceArray, this.colour);
 
             //revert
-            oldPiece.setPiece(this);
-            newPiece.setPiece(oldPiece);
+            oldPiece = newPiece;
+            newPiece = null;
             this.location = oldPiece.getLocation();
             this.setPieceState(pieceState.alive);
             if (oldPiece != null) {
@@ -421,21 +418,21 @@ protected enum moveStatus {
         // Piece to it. if the move is successful, returns true, if not
         // returns false
         public moveStatus tryMove(int moveToLocation) {
-
+            //Todo: create a better move checker.
             if (!isValidMove(moveToLocation))
                 return moveStatus.fail;
             // move is valid; apply move and check for promotion if Pawn
-            // empty old location
-            this.location.setPiece(null);
-            // update new location
-            moveToLocation.setPiece(this);
+            // empty old location=
+            pieceArray[moveToLocation] = pieceArray[location];
+            pieceArray[location] = null;
+
             // update self location
             this.location = moveToLocation;
 
             if (type == pieceType.pawn) {
                 return ((location >= 0 && location <= 7) || (location >= 56 || location <= 63)) ? moveStatus.promote : moveStatus.success;
             } else if (type == pieceType.rook) {
-
+                return moveStatus.success;
             }
 
             return moveStatus.success;
@@ -447,7 +444,7 @@ protected enum moveStatus {
 
     }
 
-    protected class Pawn implements availableMoves {
+    public static class Pawn implements availableMoves {
         // only Piece whose moves depend on colour
         public ArrayList<Integer> getAvailableMoves(Piece piece) {
             if (piece.getLocation() == deadCell)
@@ -463,305 +460,305 @@ protected enum moveStatus {
             // as standard, white is on bottom, black on top
             // white moves 6 -> 0; black moves 1 -> 7
             if (piece.getPieceColour() == objectColour.white) {
-                // move forward one Cell
-                if (pieceArray[currLocation + 8].getPiece() == null)
-                    retList.add(currLocation + 8);
-
                 // check moving left
-                if (piece.location % 8 != 0
-                        && pieceArray[currLocation + 7].getPiece() != null
-                        && board[currX - 1][currY - 1].getPiece()
+                if (currLocation % 8 != 0
+                        && pieceArray[currLocation + 7] != null
+                        && pieceArray[currLocation + 7]
                         .getPieceColour() == objectColour.black)
-                    retList.add(piece.location + 7);
+                    retList.add(currLocation + 7);
 
                 // check moving right
-                if (currX < 7
-                        && board[currX + 1][currY - 1].getPiece() != null
-                        && board[currX + 1][currY - 1].getPiece()
-                        .getPieceColour() == objectColour.black)
-                    retList.add(piece.location + 9);
+                if (currLocation - 7 % 8 != 0
+                        && pieceArray[currLocation + 9] != null
+                        && pieceArray[currLocation + 9].getPieceColour() == objectColour.black)
+                    retList.add(currLocation + 9);
 
                 // default location, making 4 available moves, rather than 3
-                if (currY == 6 && board[currX][currY - 1].getPiece() == null
-                        && board[currX][currY - 2].getPiece() == null)
-                    retList.add(piece.location - (8 * 2));
-            } else {
-                // COPY PASTA! YAAY! : (
-                // move forward one Cell
-                if (board[currX][currY + 1].getPiece() == null)
-                    retList.add(piece.location + 8);
+                if (pieceArray[currLocation + 1] == null) {
+                    if (currLocation >= 8 && currLocation <= 15) {
+                        retList.add(currLocation + 16);
+                    } else {
+                        retList.add(currLocation + 16);
+                    }
+                } else {
+                    // COPY PASTA! YAAY! : (
+                    // move forward one Cell
+                    if (currLocation > 0 && pieceArray[currLocation - 1] == null) {
+                        if (currLocation >= 56 && currLocation <= 63) {
+                            retList.add(currLocation - 16);
+                        } else {
+                            retList.add(currLocation - 8);
+                        }
+                    }
 
-                // check moving left
-                if (currX > 0
-                        && board[currX - 1][currY + 1].getPiece() != null
-                        && board[currX - 1][currY + 1].getPiece().getPieceColour() == objectColour.white)
-                    retList.add(piece.location + 7);
+                    // check moving left
+                    if (currLocation > 0 && currLocation % 8 != 0
+                            && pieceArray[currLocation - 9] != null
+                            && pieceArray[currLocation - 7].getPieceColour() == objectColour.white)
+                        retList.add(currLocation - 9);
 
-                // check moving right
-                if (currX < 7
-                        && board[currX + 1][currY + 1].getPiece() != null
-                        && board[currX + 1][currY + 1].getPiece().getPieceColour() == objectColour.white)
-                    retList.add(piece.location + 9);
-
-                // default location, making 4 available moves, rather than 3
-                if (currY == 1 && board[currX][currY + 1].getPiece() == null
-                        && board[currX][currY + 2].getPiece() == null)
-                    retList.add(piece.location + (8 * 2));
+                    // check moving right
+                    if (currLocation > 0 && currLocation - 7 % 8 != 0
+                            && pieceArray[currLocation - 7] != null
+                            && pieceArray[currLocation - 7].getPieceColour() == objectColour.white)
+                        retList.add(currLocation - 7);
+                }
             }
             return retList;
         }
     }
 
-    protected class Bishop implements availableMoves {
-        public ArrayList<Integer> getAvailableMoves(Piece piece) {
-            if (piece.getLocation() == deadCell)
-                return null;
-            ArrayList<Integer> retList = new ArrayList<>();
-            int currLocation = piece.getLocation();
-            // set i to 1 because there's no point in checking whether
-            // staying in place is a valid move. that's fucking stupid
-            // even with colour checking
-            int i = 0;
-            // check the diagonal until you see a Piece.
-            // right, up
-            while ((currLocation + i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation < 56
-                    && pieceArray[currLocation + i].getPiece() == null || pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                // if the Piece is one of the opponent's, it is a valid move
-                if (pieceArray[currLocation + i].getPiece() != null
-                        && pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation + i]);
-                    break;
-                }
-                retList.add(pieceArray[currLocation + i]);
-                i += 9;
-            }
 
-            i = 0;
-            // right, down
-            while ((currLocation - i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation > 7
-                    && (pieceArray[currLocation - i].getPiece() == null || pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation - i].getPiece() != null
-                        && pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation - i]);
-                    break;
+        protected static class Bishop implements availableMoves {
+            public ArrayList<Integer> getAvailableMoves(Piece piece) {
+                if (piece.getLocation() == deadCell)
+                    return null;
+                ArrayList<Integer> retList = new ArrayList<>();
+                int currLocation = piece.getLocation();
+                // set i to 1 because there's no point in checking whether
+                // staying in place is a valid move. that's fucking stupid
+                // even with colour checking
+                int i = 0;
+                // check the diagonal until you see a Piece.
+                // right, up
+                while ((currLocation + i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation < 56
+                        && pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+                    // if the Piece is one of the opponent's, it is a valid move
+                    if (pieceArray[currLocation + i] != null
+                            && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation + i);
+                        break;
+                    }
+                    retList.add(currLocation + i);
+                    i += 9;
                 }
-                retList.add(pieceArray[currLocation - i]);
-                i += 7;
-            }
 
-            i = 0;
-            // left, down
-            while ((currLocation > -1 && currLocation - i != 8 * (currLocation / 8) + (currLocation % 8) && currLocation > 7)
-                    && (pieceArray[currLocation - i].getPiece() == null || pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation - i].getPiece() != null
-                        && pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation - i]);
-                    break;
+                i = 0;
+                // right, down
+                while ((currLocation - i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation > 7
+                        && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation - i] != null
+                            && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation - i);
+                        break;
+                    }
+                    retList.add(currLocation - i);
+                    i += 7;
                 }
-                retList.add(pieceArray[currLocation - i]);
-                i += 9;
-            }
 
-            i = 0;
-            // left, up
-            while ((currLocation < 55 && currLocation + i != 8 * (currLocation / 8) + (currLocation % 8))
-                    && (pieceArray[currLocation + i].getPiece() == null || pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation + i].getPiece() != null
-                        && pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation + i]);
-                    break;
+                i = 0;
+                // left, down
+                while ((currLocation > -1 && currLocation - i != 8 * (currLocation / 8) + (currLocation % 8) && currLocation > 7)
+                        && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation - i] != null
+                            && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation - i);
+                        break;
+                    }
+                    retList.add(currLocation - i);
+                    i += 9;
                 }
-                retList.add(pieceArray[currLocation + i]);
-                i += 7;
-            }
 
-            return retList;
+                i = 0;
+                // left, up
+                while ((currLocation < 55 && currLocation + i != 8 * (currLocation / 8) + (currLocation % 8))
+                        && (pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation + i] != null
+                            && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation + i);
+                        break;
+                    }
+                    retList.add(currLocation + i);
+                    i += 7;
+                }
+
+                return retList;
+            }
+        }
+
+        // METHODS
+
+        protected static class Knight implements availableMoves {
+            public ArrayList<Integer> getAvailableMoves(Piece piece) {
+                if (piece.getLocation() == deadCell)
+                    return null;
+                ArrayList<Integer> retList = new ArrayList<Integer>();
+                int currLocation = piece.getLocation();
+                // the Knight has 8 moves, so we'll just explicitly define them
+                // since it's not that much more verbose than the alternateive
+                // and much easier to write.
+                // TODO: think about optimizing this. not a priority at the moment
+                // like, this is a circular pattern, or check the rectangle 2 away,
+                // skipping every other Cell
+
+                //Two over and one up
+                if (currLocation < 54 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
+                        && (pieceArray[currLocation + 10] == null || pieceArray[currLocation + 10].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation + 10);
+
+                //Two back and one up
+                if (currLocation % 8 != 0 && (currLocation - 1 % 8) != 0
+                        && (pieceArray[currLocation + 6] == null || pieceArray[currLocation + 6].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation + 6);
+
+                //One over and two up
+                if (currLocation < 47 && currLocation - 7 % 8 != 0
+                        && (pieceArray[currLocation + 17] == null || pieceArray[currLocation + 17].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation + 17);
+
+                //One over and two up
+                if (currLocation % 8 != 0 && currLocation < 48
+                        && (pieceArray[currLocation + 15] == null || pieceArray[currLocation + 15].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation + 15);
+
+                //Two over and one down
+                if (currLocation >= 13 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
+                        && (pieceArray[currLocation - 6] == null || pieceArray[currLocation - 6].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation - 6);
+
+                //Two back and one down
+                if (currLocation >= 10 && currLocation % 8 != 0 && currLocation - 1 % 8 != 0
+                        && (pieceArray[currLocation - 10] == null || pieceArray[currLocation - 10].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation - 10);
+
+                //One over and two down
+                if (currLocation >= 16 && currLocation - 7 % 8 != 0
+                        && (pieceArray[currLocation - 15] == null || pieceArray[currLocation - 15].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation - 15);
+
+                //One back and two down
+                if (currLocation > 17 && currLocation % 8 != 0
+                        && (pieceArray[currLocation - 17] == null || pieceArray[currLocation - 17].getPieceColour() != piece.getPieceColour()))
+                    retList.add(currLocation - 17);
+
+                return retList;
+            }
+        }
+
+        protected static class Rook implements availableMoves {
+            public ArrayList<Integer> getAvailableMoves(Piece piece) {
+                if (piece.getLocation() == deadCell)
+                    return null;
+                ArrayList<Integer> retList = new ArrayList<Integer>();
+                int currLocation = piece.getLocation();
+                int i = 1;
+
+                // right
+                while (i < (8 - (currLocation % 8))
+                        && (pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation + i] != null
+                            && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation + i);
+                        break;
+                    }
+                    retList.add(currLocation + i);
+                    i++;
+                }
+
+                i = 1;
+                // left
+                while (i < (8 - (currLocation % 8))
+                        && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation - i] != null
+                            && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation - i);
+                        break;
+                    }
+                    retList.add(currLocation - i);
+                    i++;
+                }
+
+                i = 8;
+                // down
+                while (currLocation - i > 0
+                        && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation - i] != null
+                            && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation - i);
+                        break;
+                    }
+                    retList.add(currLocation - i);
+                    i += 8;
+                }
+
+                i = 1;
+                // up
+                while (currLocation + i <= 63
+                        && (pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour())) {
+                    if (pieceArray[currLocation + i] != null
+                            && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+                        retList.add(currLocation + i);
+                        break;
+                    }
+                    retList.add(currLocation + i);
+                    i++;
+                }
+                return retList;
+            }
+        }
+
+        protected static class Queen implements availableMoves {
+            private Rook horizontalVerical;
+            private Bishop diagonal;
+
+            public ArrayList<Integer> getAvailableMoves(Piece piece) {
+                if (piece.getLocation() == deadCell)
+                    return null;
+                horizontalVerical = new Rook();
+                diagonal = new Bishop();
+                ArrayList<Integer> retList = horizontalVerical
+                        .getAvailableMoves(piece);
+                ArrayList<Integer> moreMoves = diagonal.getAvailableMoves(piece);
+                for (int i = 0; i < moreMoves.size(); i++) {
+                    retList.add(moreMoves.get(i));
+                }
+                return retList;
+            }
+        }
+
+        protected static class King implements availableMoves {
+            public ArrayList<Integer> getAvailableMoves(Piece piece) {
+                if (piece.getLocation() == deadCell)
+                    return null;
+                ArrayList<Integer> retList = new ArrayList<>();
+                int currLocation = piece.getLocation();
+                // if the King moves and there is a check, regardless of the colour
+                // it is an invalid move.
+                // TODO:implement King moves in a way that won't cause infinite
+                // loops
+                // for example: checkForCheck doesn't look at the King. That would
+                // do it
+                // Also: don't check for mate here.
+
+                if (currLocation < 63
+                        && (pieceArray[currLocation + 9] == null))
+                    retList.add(currLocation + 9);
+
+                if (currLocation % 8 != 0 && (pieceArray[currLocation + 6] != null))
+                    retList.add(currLocation + 6);
+
+                if (currX < 7 && currY > 0
+                        && (piece.isValidMove(board[currX + 1][currY - 1])))
+                    retList.add(board[currX + 1][currY - 1]);
+
+                if (currX < 7 && (piece.isValidMove(board[currX + 1][currY])))
+                    retList.add(board[currX + 1][currY]);
+
+                if (currX < 7 && currY < 7
+                        && (piece.isValidMove(board[currX + 1][currY + 1])))
+                    retList.add(board[currX + 1][currY + 1]);
+
+                if (currY < 7 && (piece.isValidMove(board[currX][currY + 1])))
+                    retList.add(board[currX][currY + 1]);
+
+                if (currX > 0 && currY < 7
+                        && (piece.isValidMove(board[currX - 1][currY + 1])))
+                    retList.add(board[currX - 1][currY + 1]);
+
+                if (currX > 0 && piece.isValidMove(board[currX - 1][currY]))
+                    retList.add(board[currX - 1][currY]);
+
+                return retList;
+            }
         }
     }
-
-    // METHODS
-
-    protected class Knight implements availableMoves {
-        public ArrayList<Integer> getAvailableMoves(Piece piece) {
-            if (piece.getLocation() == deadCell)
-                return null;
-            ArrayList<Integer> retList = new ArrayList<Integer>();
-            int currLocation = piece.getLocation();
-            // the Knight has 8 moves, so we'll just explicitly define them
-            // since it's not that much more verbose than the alternateive
-            // and much easier to write.
-            // TODO: think about optimizing this. not a priority at the moment
-            // like, this is a circular pattern, or check the rectangle 2 away,
-            // skipping every other Cell
-
-            //Two over and one up
-            if (currLocation < 54 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
-                    && (pieceArray[currLocation + 10].getPiece() == null || pieceArray[currLocation + 10].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation + 10]);
-
-            //Two back and one up
-            if (currLocation % 8 != 0 && (currLocation - 1 % 8) != 0
-                    && (pieceArray[currLocation + 6].getPiece() == null || pieceArray[currLocation + 6].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation + 6]);
-
-            //One over and two up
-            if (currLocation < 47 && currLocation - 7 % 8 != 0
-                    && (pieceArray[currLocation + 17].getPiece() == null || pieceArray[currLocation + 17].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation + 17]);
-
-            //One over and two up
-            if (currLocation % 8 != 0 && currLocation < 48
-                    && (pieceArray[currLocation + 15].getPiece() == null || pieceArray[currLocation + 15].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation + 15]);
-
-            //Two over and one down
-            if (currLocation >= 13 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8
-                    && (pieceArray[currLocation - 6].getPiece() == null || pieceArray[currLocation - 6].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation - 6]);
-
-            //Two back and one down
-            if (currLocation >= 10 && currLocation % 8 != 0 && currLocation - 1 % 8 != 0
-                    && (pieceArray[currLocation - 10].getPiece() == null || pieceArray[currLocation - 10].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation - 10]);
-
-            //One over and two down
-            if (currLocation >= 16 && currLocation - 7 % 8 != 0
-                    && (pieceArray[currLocation - 15].getPiece() == null || pieceArray[currLocation - 15].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation - 15]);
-
-            //One back and two down
-            if (currLocation > 17 && currLocation % 8 != 0
-                    && (pieceArray[currLocation - 17].getPiece() == null || pieceArray[currLocation - 17].getPiece().getPieceColour() != piece.getPieceColour()))
-                retList.add(pieceArray[currLocation - 17]);
-
-            return retList;
-        }
-    }
-
-    protected class Rook implements availableMoves {
-        public ArrayList<Integer> getAvailableMoves(Piece piece) {
-            if (piece.getLocation() == deadCell)
-                return null;
-            ArrayList<Integer> retList = new ArrayList<Integer>();
-            int currLocation = piece.getLocation();
-            int i = 1;
-
-            // right
-            while (i < (8 - (currLocation % 8))
-                    && (pieceArray[currLocation + i].getPiece() == null || pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation + i].getPiece() != null
-                        && pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation + i]);
-                    break;
-                }
-                retList.add(pieceArray[currLocation + i]);
-                i++;
-            }
-
-            i = 1;
-            // left
-            while (i < (8 - (currLocation % 8))
-                    && (pieceArray[currLocation - i].getPiece() == null || pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation - i].getPiece() != null
-                        && pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation - i]);
-                    break;
-                }
-                retList.add(pieceArray[currLocation - i]);
-                i++;
-            }
-
-            i = 8;
-            // down
-            while (currLocation - i > 0
-                    && (pieceArray[currLocation - i].getPiece() == null || pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation - i].getPiece() != null
-                        && pieceArray[currLocation - i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation - i]);
-                    break;
-                }
-                retList.add(pieceArray[currLocation - i]);
-                i += 8;
-            }
-
-            i = 1;
-            // up
-            while (currLocation + i <= 63
-                    && (pieceArray[currLocation + i].getPiece() == null || pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation + i].getPiece() != null
-                        && pieceArray[currLocation + i].getPiece().getPieceColour() != piece.getPieceColour()) {
-                    retList.add(pieceArray[currLocation + i]);
-                    break;
-                }
-                retList.add(pieceArray[currLocation + i]);
-                i++;
-            }
-            return retList;
-        }
-    }
-
-    protected class Queen implements availableMoves {
-        private Rook horizontalVerical;
-        private Bishop diagonal;
-
-        public ArrayList<Integer> getAvailableMoves(Piece piece) {
-            if (piece.getLocation() == deadCell)
-                return null;
-            horizontalVerical = new Rook();
-            diagonal = new Bishop();
-            ArrayList<Integer> retList = horizontalVerical
-                    .getAvailableMoves(piece);
-            ArrayList<Integer> moreMoves = diagonal.getAvailableMoves(piece);
-            for (int i = 0; i < moreMoves.size(); i++) {
-                retList.add(moreMoves.get(i));
-            }
-            return retList;
-        }
-    }
-
-    protected class King implements availableMoves {
-        public ArrayList<Integer> getAvailableMoves(Piece piece) {
-            if (piece.getLocation() == deadCell)
-                return null;
-            ArrayList<Integer> retList = new ArrayList<>();
-            int currLocation = piece.getLocation();
-            // if the King moves and there is a check, regardless of the colour
-            // it is an invalid move.
-            // TODO:implement King moves in a way that won't cause infinite
-            // loops
-            // for example: checkForCheck doesn't look at the King. That would
-            // do it
-            // Also: don't check for mate here.
-
-            if (currX > 0 && currY > 0
-                    && (piece.isValidMove(board[currX - 1][currY - 1])))
-                retList.add(board[currX - 1][currY - 1]);
-
-            if (currY > 0 && (piece.isValidMove(board[currX][currY - 1])))
-                retList.add(board[currX][currY - 1]);
-
-            if (currX < 7 && currY > 0
-                    && (piece.isValidMove(board[currX + 1][currY - 1])))
-                retList.add(board[currX + 1][currY - 1]);
-
-            if (currX < 7 && (piece.isValidMove(board[currX + 1][currY])))
-                retList.add(board[currX + 1][currY]);
-
-            if (currX < 7 && currY < 7
-                    && (piece.isValidMove(board[currX + 1][currY + 1])))
-                retList.add(board[currX + 1][currY + 1]);
-
-            if (currY < 7 && (piece.isValidMove(board[currX][currY + 1])))
-                retList.add(board[currX][currY + 1]);
-
-            if (currX > 0 && currY < 7
-                    && (piece.isValidMove(board[currX - 1][currY + 1])))
-                retList.add(board[currX - 1][currY + 1]);
-
-            if (currX > 0 && piece.isValidMove(board[currX - 1][currY]))
-                retList.add(board[currX - 1][currY]);
-
-            return retList;
-        }
-    }
-}

@@ -15,8 +15,13 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import chess.vieck.purdue.edu.chess.Core.Bishop;
+import chess.vieck.purdue.edu.chess.Core.King;
+import chess.vieck.purdue.edu.chess.Core.Knight;
 import chess.vieck.purdue.edu.chess.Core.Pawn;
 import chess.vieck.purdue.edu.chess.Core.Piece;
+import chess.vieck.purdue.edu.chess.Core.Queen;
+import chess.vieck.purdue.edu.chess.Core.Rook;
 import chess.vieck.purdue.edu.chess.Core.objectColour;
 import chess.vieck.purdue.edu.chess.Core.pieceType;
 
@@ -55,30 +60,29 @@ public class Board_Adapter extends BaseAdapter {
         for (int i = 0; i < 64; i++) {
 
             if ((i >= 48 && i <= 55)) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.rook, i, new Pawn, );
-                pieceArray[i].setImageResource(R.drawable.bpawn);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.pawn, i, new Pawn(), R.drawable.wpawn);
             } else if (i >= 8 && i <= 15) {
-                pieceArray[i].setImageResource(R.drawable.wpawn);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.pawn, i, new Pawn(), R.drawable.bpawn);
             } else if (i == 0 || i == 7) {
-                pieceArray[i].setImageResource(R.drawable.wrook);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.rook, i, new Rook(), R.drawable.wrook);
             } else if (i == 56 || i == 63) {
-                pieceArray[i].setImageResource(R.drawable.brook);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.rook, i, new Rook(), R.drawable.brook);
             } else if (i == 1 || i == 6) {
-                pieceArray[i].setImageResource(R.drawable.wknight);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.knight, i, new Knight(), R.drawable.wknight);
             } else if (i == 57 || i == 62) {
-                pieceArray[i].setImageResource(R.drawable.bknight);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.knight, i, new Knight(), R.drawable.bknight);
             } else if (i == 2 || i == 5) {
-                pieceArray[i].setImageResource(R.drawable.wbishop);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.bishop, i, new Bishop(), R.drawable.wbishop);
             } else if (i == 58 || i == 61) {
-                pieceArray[i].setImageResource(R.drawable.bbishop);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.bishop, i, new Bishop(), R.drawable.bbishop);
             } else if (i == 3) {
-                pieceArray[i].setImageResource(R.drawable.wqueen);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.queen, i, new Queen(), R.drawable.wqueen);
             } else if (i == 59) {
-                pieceArray[i].setImageResource(R.drawable.bqueen);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.queen, i, new Queen(), R.drawable.bqueen);
             } else if (i == 4) {
-                pieceArray[i].setImageResource(R.drawable.wking);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.king, i, new King(), R.drawable.wking);
             } else if (i == 60) {
-                pieceArray[i].setImageResource(R.drawable.bking);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.king, i, new King(), R.drawable.bking);
             }
         }
         pieceSelected = false;
