@@ -730,33 +730,34 @@ public class Core {
                 // do it
                 // Also: don't check for mate here.
 
+                //Foward Right
                 if (currLocation < 63
                         && (pieceArray[currLocation + 9] == null))
                     retList.add(currLocation + 9);
-
-                if (currLocation % 8 != 0 && (pieceArray[currLocation + 6] != null))
+                //Foward Left
+                if (currLocation % 8 != 0 && (pieceArray[currLocation + 6] == null))
                     retList.add(currLocation + 6);
-
-                if (currX < 7 && currY > 0
-                        && (piece.isValidMove(board[currX + 1][currY - 1])))
-                    retList.add(board[currX + 1][currY - 1]);
-
-                if (currX < 7 && (piece.isValidMove(board[currX + 1][currY])))
-                    retList.add(board[currX + 1][currY]);
-
-                if (currX < 7 && currY < 7
-                        && (piece.isValidMove(board[currX + 1][currY + 1])))
-                    retList.add(board[currX + 1][currY + 1]);
-
-                if (currY < 7 && (piece.isValidMove(board[currX][currY + 1])))
-                    retList.add(board[currX][currY + 1]);
-
-                if (currX > 0 && currY < 7
-                        && (piece.isValidMove(board[currX - 1][currY + 1])))
-                    retList.add(board[currX - 1][currY + 1]);
-
-                if (currX > 0 && piece.isValidMove(board[currX - 1][currY]))
-                    retList.add(board[currX - 1][currY]);
+                //Foward Straight
+                if (currLocation < 56
+                        && (piece.isValidMove(currLocation+8)))
+                    retList.add(currLocation+8);
+                //Right
+                if (currLocation-7 % 8 != 0 && (piece.isValidMove(currLocation+1)))
+                    retList.add(currLocation+1);
+                //Left
+                if (currLocation % 8 != 0
+                        && (piece.isValidMove(currLocation-1)))
+                    retList.add(currLocation-1);
+                //Back Left
+                if (currLocation >= 9 && currLocation % 8 != 0 && (piece.isValidMove(currLocation-9)))
+                    retList.add(currLocation-9);
+                //Back Right
+                if (currLocation-7 % 8 != 0
+                        && (piece.isValidMove(currLocation-7)))
+                    retList.add(currLocation-7);
+                //Back Straight
+                if (currLocation > 7 && piece.isValidMove(currLocation-1))
+                    retList.add(currLocation-1);
 
                 return retList;
             }
