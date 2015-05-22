@@ -85,12 +85,14 @@ public class Board_Adapter extends BaseAdapter {
                 pieceArray[i] = new Piece(objectColour.black, pieceType.king, i, new King(), R.drawable.bking);
             }
         }
+
         pieceSelected = false;
         reset = true;
         fromX = -1;
         fromY = -1;
         toX = -1;
         toY = -1;
+        this.core.setPieceArray(pieceArray);
     }
 
     public void setCore(Core core) {
@@ -99,16 +101,13 @@ public class Board_Adapter extends BaseAdapter {
         }
     }
 
-    public Piece[] getPieceArray() {
-        return pieceArray;
-    }
-
     protected Integer squareImage(int position) {
         return boardSquares[position];
     }
 
     protected Integer pieceImage(int position) {
-        return pieceArray[position].getImageResource();
+        if (pieceArray[position] != null)
+            return pieceArray[position].getImageResource();
     }
 
     private int getBoardXCoor(int x) {
