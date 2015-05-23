@@ -21,7 +21,9 @@ public class Chess_Activity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chessboard);
         GridView gridView = (GridView) findViewById(R.id.chessboard);
+        core = new Core();
         board = new Board_Adapter(this);
+        board.setCore(core);
         gridView.setAdapter(board);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -30,11 +32,7 @@ public class Chess_Activity extends ActionBarActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
-        core = new Core();
-        board.setCore(core);
-        //logic = new Core();
-        //board.setLogicEngine(logic);
-       // setContentView(board);
+
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {
