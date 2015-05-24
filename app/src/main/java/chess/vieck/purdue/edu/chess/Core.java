@@ -17,14 +17,34 @@ public class Core {
 
     public Piece[] pieceArray;
 
+    protected enum pieceType {
+        pawn, bishop, knight, rook, queen, king
+    }
+
+    protected enum objectColour {
+        black, white
+    }
+
+    protected enum pieceState {
+        alive, dead
+    }
+
+    protected enum gameState {
+        allClear, whiteCheck, whiteMate, blackCheck, blackMate, stalemate
+    }
+
+    protected enum moveStatus {
+        success, fail, promote
+    }
+
     // .ctor
     public Core() {
         // if new game
         createBoard();
         turn = objectColour.white;
         currentGameState = gameState.allClear;
-        white = new Player(objectColour.white, pieceArray);
-        black = new Player(objectColour.black, pieceArray);
+        white = new Player(objectColour.white);
+        black = new Player(objectColour.black);
     }
 
     public void createBoard() {
@@ -40,9 +60,9 @@ public class Core {
         for (int i = 0; i < 64; i++) {
 
             if ((i >= 48 && i <= 55)) {
-                pieceArray[i] = new Piece(objectColour.black, pieceType.pawn, i, new Pawn(), R.drawable.wpawn);
+                pieceArray[i] = new Piece(objectColour.black, pieceType.pawn, i, new Pawn(), R.drawable.bpawn);
             } else if (i >= 8 && i <= 15) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.pawn, i, new Pawn(), R.drawable.bpawn);
+                pieceArray[i] = new Piece(objectColour.white, pieceType.pawn, i, new Pawn(), R.drawable.wpawn);
             } else if (i == 0 || i == 7) {
                 pieceArray[i] = new Piece(objectColour.white, pieceType.rook, i, new Rook(), R.drawable.wrook);
             } else if (i == 56 || i == 63) {
@@ -69,31 +89,80 @@ public class Core {
         }
     }
 
-    public int getBoardLength(){
-        if (boardSquares != null){
+    public void updateBoard(ArrayList<Integer> availableMoves) {
+        for (int i = 0; i < 64; i++) {
+
+        }
+    }
+
+    public int getBoardLength() {
+        if (boardSquares != null) {
             return boardSquares.length;
         } else {
             return 0;
         }
     }
+
     public objectColour getTurn() {
         return turn;
     }
 
-    public Integer squareImage(int position){
-        return boardSquares[position%2];
+    public void setTurn(objectColour turn) {
+        this.turn = turn;
     }
 
-    public Integer pieceImage(int position){
-        if(pieceArray[position] != null)
+    public Piece getPiece(int position){
+        return pieceArray[position];
+    }
+
+    public void setPiece(int from, int to){
+        pieceArray[to] = pieceArray[from];
+        pieceArray[from] = null;
+    }
+    public Integer squareImage(int position) {
+        return boardSquares[position % 2];
+    }
+
+    public Integer pieceImage(int position) {
+        if (pieceArray[position] != null)
             return pieceArray[position].getImageResource();
         return null;
     }
 
-    public void setTurn(objectColour turn) { this.turn = turn; }
+    // move: moves the Piece if the move is valid; returns false otherwise
+    public boolean move(int from, int to) throws Exception {
+        Player currentPlayer = (turn == objectColour.white) ? white : black;
+        if (pieceArray[from] == null || pieceArray[from].getPieceColour() != currentPlayer.colour || to < 0 || to > 63)
+            return false;
+        // TODO: cache this so that we're not constantly re-populating
+        ArrayList<Integer> availableMoves = pieceArray[from].getAvailableMoves();
+        if (availableMoves.contains(to)) {
+            moveStatus status = pieceArray[from].tryMove(to);
+            if (status != moveStatus.promote) {
+                if (status == moveStatus.success) {
+                    return true;
+                } else
+                    return false;
+            } else {
 
-/*    private static gameState checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
-        Piece own[];
+                try {
+                    pieceType type = pieceType.bishop;
+                    // TODO: promotion logic
+                    // promotion code: UI, etc.
+                    pieceArray[from].setPieceType(type);
+                    return true;
+                } catch (incompatiblePieceTypeConversionException ex) {
+                    throw new Exception(
+                            "MAN, WHAT THE FUCK!? Promotion code is seriously jacked up.");
+                }
+            }
+        }
+        return false;
+    }
+
+
+    private static gameState checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
+   /*     Piece own[];
         Piece opponent[];
         if (whoseCheck == objectColour.white) {
             own = white.getPieces();
@@ -111,9 +180,9 @@ public class Core {
                 else
                     return gameState.blackCheck;
             }
-        }
+        }*/
         return gameState.allClear;
-    }*/
+    }
 
     private gameState checkForMate() {
         // TODO: check for stalemate here
@@ -149,38 +218,6 @@ public class Core {
         return gameState.allClear;
     }
 
-    // TODO: maybe move this into a game class
-    public boolean move(int oldLocation, int newLocation)
-            throws Exception {
-        Player currentPlayer = (getTurn() == objectColour.white) ? white : black;
-        Piece piece = null; // = pieceArray[oldLocation];
-        boolean success = currentPlayer.move(piece, newLocation);
-        if (success)
-            turn = turn == objectColour.white ? objectColour.black
-                    : objectColour.white;
-        return success;
-    }
-
-    protected enum pieceType {
-        pawn, bishop, knight, rook, queen, king
-    }
-
-    protected enum objectColour {
-        black, white
-    }
-
-    protected enum pieceState {
-        alive, dead
-    }
-
-    protected enum gameState {
-        allClear, whiteCheck, whiteMate, blackCheck, blackMate, stalemate
-    }
-
-    protected enum moveStatus {
-        success, fail, promote
-    }
-
     private interface availableMoves {
         public ArrayList<Integer> getAvailableMoves(Piece Piece);
     }
@@ -188,65 +225,17 @@ public class Core {
     private static class Player {
         // properties
         private objectColour colour;
-        private Piece[] pieceArray;
-        private Piece piece;
 
         // .ctor
-        Player(objectColour colour, Piece[] pieceArray) {
+        Player(objectColour colour) {
             this.colour = colour;
-            this.pieceArray = pieceArray;
         }
-
-        // methods
 
         public objectColour getColour() {
             return colour;
         }
 
-        public Piece[] getPieceArray() {
-            return pieceArray;
-        }
 
-        public Piece getPiece() {
-            return piece;
-        }
-
-        public void setPiece(Piece piece) {
-            if (this.piece != null) {
-                this.piece.setPieceState(pieceState.dead);
-                this.piece = piece;
-            }
-        }
-
-        // move: moves the Piece if the move is valid; returns false otherwise
-        public boolean move(Piece Piece, int moveToLocation) throws Exception {
-            if (Piece == null || Piece.getPieceColour() != this.colour || moveToLocation > 0 || moveToLocation < 63)
-                return false;
-            // TODO: cache this so that we're not constantly re-populating
-            ArrayList<Integer> availableMoves = Piece.getAvailableMoves();
-            if (availableMoves.contains(moveToLocation)) {
-                moveStatus status = Piece.tryMove(moveToLocation);
-                if (status != moveStatus.promote) {
-                    if (status == moveStatus.success) {
-                        return true;
-                    } else
-                        return false;
-                } else {
-
-                    try {
-                        pieceType type = pieceType.bishop;
-                        // TODO: promotion logic
-                        // promotion code: UI, etc.
-                        Piece.setPieceType(type);
-                        return true;
-                    } catch (incompatiblePieceTypeConversionException ex) {
-                        throw new Exception(
-                                "MAN, WHAT THE FUCK!? Promotion code is seriously jacked up.");
-                    }
-                }
-            }
-            return false;
-        }
     }
 
     public static class incompatiblePieceTypeConversionException extends Exception {
@@ -271,7 +260,6 @@ public class Core {
         // fire
         private availableMoves availMoves;
 
-        // .ctor
         Piece(objectColour colour, pieceType type, int location,
               availableMoves movementPattern, int imageResource) {
             this.colour = colour;
@@ -307,9 +295,6 @@ public class Core {
         public objectColour getPieceColour() {
             return colour;
         }
-
-
-        // methods
 
         public pieceType getPieceType() {
             return type;
