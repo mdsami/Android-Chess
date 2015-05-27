@@ -1,5 +1,8 @@
 package chess.vieck.purdue.edu.chess;
 
+import android.util.Log;
+import android.widget.ImageView;
+
 import java.util.ArrayList;
 
 /**
@@ -60,29 +63,29 @@ public class Core {
         for (int i = 0; i < 64; i++) {
 
             if ((i >= 48 && i <= 55)) {
-                pieceArray[i] = new Piece(objectColour.black, pieceType.pawn, i, new Pawn(), R.drawable.bpawn);
-            } else if (i >= 8 && i <= 15) {
                 pieceArray[i] = new Piece(objectColour.white, pieceType.pawn, i, new Pawn(), R.drawable.wpawn);
+            } else if (i >= 8 && i <= 15) {
+                pieceArray[i] = new Piece(objectColour.black, pieceType.pawn, i, new Pawn(), R.drawable.bpawn);
             } else if (i == 0 || i == 7) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.rook, i, new Rook(), R.drawable.wrook);
-            } else if (i == 56 || i == 63) {
                 pieceArray[i] = new Piece(objectColour.black, pieceType.rook, i, new Rook(), R.drawable.brook);
+            } else if (i == 56 || i == 63) {
+                pieceArray[i] = new Piece(objectColour.white, pieceType.rook, i, new Rook(), R.drawable.wrook);
             } else if (i == 1 || i == 6) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.knight, i, new Knight(), R.drawable.wknight);
-            } else if (i == 57 || i == 62) {
                 pieceArray[i] = new Piece(objectColour.black, pieceType.knight, i, new Knight(), R.drawable.bknight);
+            } else if (i == 57 || i == 62) {
+                pieceArray[i] = new Piece(objectColour.white, pieceType.knight, i, new Knight(), R.drawable.wknight);
             } else if (i == 2 || i == 5) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.bishop, i, new Bishop(), R.drawable.wbishop);
-            } else if (i == 58 || i == 61) {
                 pieceArray[i] = new Piece(objectColour.black, pieceType.bishop, i, new Bishop(), R.drawable.bbishop);
+            } else if (i == 58 || i == 61) {
+                pieceArray[i] = new Piece(objectColour.white, pieceType.bishop, i, new Bishop(), R.drawable.wbishop);
             } else if (i == 3) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.queen, i, new Queen(), R.drawable.wqueen);
-            } else if (i == 59) {
                 pieceArray[i] = new Piece(objectColour.black, pieceType.queen, i, new Queen(), R.drawable.bqueen);
+            } else if (i == 59) {
+                pieceArray[i] = new Piece(objectColour.white, pieceType.queen, i, new Queen(), R.drawable.wqueen);
             } else if (i == 4) {
-                pieceArray[i] = new Piece(objectColour.white, pieceType.king, i, new King(), R.drawable.wking);
-            } else if (i == 60) {
                 pieceArray[i] = new Piece(objectColour.black, pieceType.king, i, new King(), R.drawable.bking);
+            } else if (i == 60) {
+                pieceArray[i] = new Piece(objectColour.white, pieceType.king, i, new King(), R.drawable.wking);
             } else {
                 pieceArray[i] = null;
             }
@@ -115,9 +118,8 @@ public class Core {
         return pieceArray[position];
     }
 
-    public void setPiece(int from, int to){
-        pieceArray[to] = pieceArray[from];
-        pieceArray[from] = null;
+    public void setPiece(int loc, Piece piece){
+        pieceArray[loc] = piece;
     }
     public Integer squareImage(int position) {
         return boardSquares[position % 2];
@@ -132,7 +134,8 @@ public class Core {
     // move: moves the Piece if the move is valid; returns false otherwise
     public boolean move(int from, int to) throws Exception {
         Player currentPlayer = (turn == objectColour.white) ? white : black;
-        if (pieceArray[from] == null || pieceArray[from].getPieceColour() != currentPlayer.colour || to < 0 || to > 63)
+        Log.d("Move","pieceArray["+from+"]:"+pieceArray[from].getPieceColour() + " currentPlayer:" + currentPlayer.getColour());
+        if (pieceArray[from] == null || pieceArray[from].getPieceColour() != currentPlayer.getColour() || to < 0 || to > 63)
             return false;
         // TODO: cache this so that we're not constantly re-populating
         ArrayList<Integer> availableMoves = pieceArray[from].getAvailableMoves();
@@ -253,20 +256,22 @@ public class Core {
         private int location;
         // state of the Piece
         private pieceState state;
-        private int imageResource;
+        private ImageView imageResource;
         // type of Piece
         private pieceType type;
+
         // gets a list of moves that don't go off the board or cause friendly
         // fire
         private availableMoves availMoves;
 
         Piece(objectColour colour, pieceType type, int location,
-              availableMoves movementPattern, int imageResource) {
+              availableMoves movementPattern, ImageView imageResource) {
             this.colour = colour;
             this.type = type;
             this.location = location;
             this.availMoves = movementPattern;
             this.imageResource = imageResource;
+            this.state = pieceState.alive;
         }
 
         public int getLocation() {
@@ -284,11 +289,11 @@ public class Core {
             }
         }
 
-        public int getImageResource() {
+        public ImageView getImageResource() {
             return imageResource;
         }
 
-        public void setImageResource(int imageResource) {
+        public void setImageResource(ImageView imageResource) {
             this.imageResource = imageResource;
         }
 

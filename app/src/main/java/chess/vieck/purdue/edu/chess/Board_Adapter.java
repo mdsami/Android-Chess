@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import chess.vieck.purdue.edu.chess.Core.Piece;
 
@@ -26,6 +27,7 @@ public class Board_Adapter extends BaseAdapter {
     FrameLayout touchLayout;
     ImageView touchImage;
     Piece currentPiece;
+    int currentLocation;
     private Context context;
     private Core core;
 
@@ -70,21 +72,22 @@ public class Board_Adapter extends BaseAdapter {
             viewHolder.piece = (ImageView) squareContainerView.findViewById(R.id.Piece);
             if (this.core.pieceImage(position) != null) {
                 viewHolder.piece.setImageResource(core.pieceImage(position));
-                viewHolder.piece.setOnTouchListener(new ListenForTouch());
-                viewHolder.square.setOnDragListener(new ListenForDrag());
             }
+            viewHolder.location = position;
+            viewHolder.piece.setOnTouchListener(new ListenForTouch());
+            viewHolder.square.setOnDragListener(new ListenForDrag());
             squareContainerView.setTag(viewHolder);
             // ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag(pieceImage(position));
-            // viewHolder.piece.setTag(boardPieces[position]);
+            viewHolder.piece.setTag(viewHolder);
         }
         ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag();
-        //Piece piece = viewHolder.piece;
         return squareContainerView;
     }
 
     static class ViewHolder {
         public ImageView square;
         public ImageView piece;
+        public int location;
     }
 
     private final class ListenForTouch implements OnTouchListener {
@@ -98,11 +101,9 @@ public class Board_Adapter extends BaseAdapter {
                 v.setVisibility(View.INVISIBLE);
                 touchLayout = (FrameLayout) v.getParent();
                 touchImage = (ImageView) touchLayout.getChildAt(1);
-                currentPiece = (Piece) touchImage.getTag();
-                if (currentPiece != null) {
-                    currentPiece.getAvailableMoves();
-                    core.updateBoard(currentPiece.getAvailableMoves());
-                }
+                ViewHolder viewHolder = (ViewHolder) touchImage.getTag();
+                currentLocation = viewHolder.location;
+                currentPiece = core.getPiece(currentLocation);
                 return true;
             } else {
                 return false;
@@ -112,25 +113,52 @@ public class Board_Adapter extends BaseAdapter {
 
     private final class ListenForDrag implements OnDragListener {
         @Override
-        public boolean onDrag(View v, DragEvent event) {
-            int action = event.getAction();
+        public boolean onDrag(View v, DragEvent dragEvent) {
+            int dragAction = dragEvent.getAction();
+            View dragView = (View) dragEvent.getLocalState();
             FrameLayout square;
             ImageView board;
-            if (action == DragEvent.ACTION_DROP) {
-                square = (FrameLayout) v.getParent();
-                board = (ImageView) square.getChildAt(1);
-                Piece piece = (Piece) board.getTag();
-                if (piece != null) {
-                    try {
-                        if (core.move(currentPiece.getLocation(), piece.getLocation())) {
-                            core.setPiece(currentPiece.getLocation(), piece.getLocation());
+            //Log.d("DEBUG","Name:"+v.getResources().getResourceName(v.getId()));
+            switch (dragAction) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    break;
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    break;
+                case DragEvent.ACTION_DRAG_EXITED:
+                    break;
+                case DragEvent.ACTION_DROP:
+                    square = (FrameLayout) v.getParent();
+                    board = (ImageView) square.getChildAt(1);
+                    ViewHolder viewHolder = (ViewHolder) board.getTag();
+                    int destinationLocation = viewHolder.location;
+
+                    Toast.makeText(context, "" + currentLocation + " " + destinationLocation,
+                            Toast.LENGTH_SHORT).show();
+                    if (currentPiece != null && currentPiece.getLocation() != destinationLocation) {
+                        Piece destinationPiece = core.getPiece(destinationLocation);
+                        core.setPiece(destinationLocation, currentPiece);
+                        core.setPiece(currentLocation, null);
+                        board.setVisibility(View.VISIBLE);
+                        viewHolder.piece = destinationPiece.getImageResource();
+                        try {
+                            //if (core.move(currentPiece.getLocation(), piece.getLocation())) {
+                                /*touchImage.setImageResource(currentPiece.getImageResource());
+                                touchImage.setVisibility(View.VISIBLE);
+                                core.setPiece(piece.getLocation(), destPiece);
+                                core.setPiece(currentPiece.getLocation(),currentPiece);
+                                */
+                            board.setTag(viewHolder);
+                            Log.d("Move","PieceArray["+destinationLocation+"]:"+core.getPiece(destinationLocation));
+                            return true;
+                            //}
+                        } catch (Exception e) {
+                            Log.d("DEBUG", "Piece move failed.");
                         }
-                    } catch (Exception e) {
-                        Log.d("DEBUG", "Piece move failed.");
+                        return false;
                     }
-                    return false;
-                    //if (piece.getAvailableMoves().contains(pieceAtSquare.getLocation()))
-                }
+                    break;
+                case DragEvent.ACTION_DRAG_ENDED:
+                    break;
             }
             return true;
         }
