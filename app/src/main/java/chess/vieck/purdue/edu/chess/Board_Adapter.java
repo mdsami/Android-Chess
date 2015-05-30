@@ -27,7 +27,7 @@ public class Board_Adapter extends BaseAdapter {
     FrameLayout touchLayout;
     ImageView touchImage;
     Piece currentPiece;
-    int currentLocation;
+    ViewHolder curHolder, destHolder = null;
     private Context context;
     private Core core;
 
@@ -59,8 +59,8 @@ public class Board_Adapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View squareContainerView = convertView;
-        if (squareContainerView == null) {
+        View squareContainerView;
+        if (convertView == null) {
             //Inflate the layout
             final LayoutInflater layoutInflater = LayoutInflater.from(this.context);
             squareContainerView = layoutInflater.inflate(R.layout.square, null);
@@ -70,17 +70,23 @@ public class Board_Adapter extends BaseAdapter {
             viewHolder.square = (ImageView) squareContainerView.findViewById(R.id.square);
             viewHolder.square.setImageResource(core.squareImage(position + position / 8 % 2));
             viewHolder.piece = (ImageView) squareContainerView.findViewById(R.id.Piece);
-            if (this.core.pieceImage(position) != null) {
-                viewHolder.piece.setImageResource(core.pieceImage(position));
+            if (this.core.getPieceImage(position) != null) {
+                viewHolder.piece.setImageResource(core.getPieceImage(position));
             }
             viewHolder.location = position;
             viewHolder.piece.setOnTouchListener(new ListenForTouch());
             viewHolder.square.setOnDragListener(new ListenForDrag());
             squareContainerView.setTag(viewHolder);
-            // ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag(pieceImage(position));
             viewHolder.piece.setTag(viewHolder);
+        } else {
+            squareContainerView = convertView;
+
         }
-        ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag();
+        /*ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag();
+        viewHolder.piece.setTag(viewHolder);*/
+        if (core.getPiece(position) != null) {
+            Log.d("Initialize Board", "Location " + position + " color " + core.getPiece(position).getPieceColour() + " type " + core.getPiece(position).getPieceType());
+        }
         return squareContainerView;
     }
 
@@ -101,9 +107,8 @@ public class Board_Adapter extends BaseAdapter {
                 v.setVisibility(View.INVISIBLE);
                 touchLayout = (FrameLayout) v.getParent();
                 touchImage = (ImageView) touchLayout.getChildAt(1);
-                ViewHolder viewHolder = (ViewHolder) touchImage.getTag();
-                currentLocation = viewHolder.location;
-                currentPiece = core.getPiece(currentLocation);
+                curHolder = (ViewHolder) v.getTag();
+                currentPiece = core.getPiece(curHolder.location);
                 return true;
             } else {
                 return false;
@@ -115,10 +120,9 @@ public class Board_Adapter extends BaseAdapter {
         @Override
         public boolean onDrag(View v, DragEvent dragEvent) {
             int dragAction = dragEvent.getAction();
-            View dragView = (View) dragEvent.getLocalState();
             FrameLayout square;
-            ImageView board;
-            //Log.d("DEBUG","Name:"+v.getResources().getResourceName(v.getId()));
+            ImageView piece;
+
             switch (dragAction) {
                 case DragEvent.ACTION_DRAG_STARTED:
                     break;
@@ -128,35 +132,27 @@ public class Board_Adapter extends BaseAdapter {
                     break;
                 case DragEvent.ACTION_DROP:
                     square = (FrameLayout) v.getParent();
-                    board = (ImageView) square.getChildAt(1);
-                    ViewHolder viewHolder = (ViewHolder) board.getTag();
-                    int destinationLocation = viewHolder.location;
-
-                    Toast.makeText(context, "" + currentLocation + " " + destinationLocation,
+                    piece = (ImageView) square.getChildAt(1);
+                    destHolder = (ViewHolder) square.getTag();
+                    Toast.makeText(context, "" + curHolder.location + " " + destHolder.location,
                             Toast.LENGTH_SHORT).show();
-                    if (currentPiece != null && currentPiece.getLocation() != destinationLocation) {
-                        Piece destinationPiece = core.getPiece(destinationLocation);
-                        core.setPiece(destinationLocation, currentPiece);
-                        core.setPiece(currentLocation, null);
-                        board.setVisibility(View.VISIBLE);
-                        viewHolder.piece = destinationPiece.getImageResource();
-                        try {
-                            //if (core.move(currentPiece.getLocation(), piece.getLocation())) {
-                                /*touchImage.setImageResource(currentPiece.getImageResource());
-                                touchImage.setVisibility(View.VISIBLE);
-                                core.setPiece(piece.getLocation(), destPiece);
-                                core.setPiece(currentPiece.getLocation(),currentPiece);
-                                */
-                            board.setTag(viewHolder);
-                            Log.d("Move","PieceArray["+destinationLocation+"]:"+core.getPiece(destinationLocation));
-                            return true;
-                            //}
-                        } catch (Exception e) {
-                            Log.d("DEBUG", "Piece move failed.");
+                    try {
+                        if (currentPiece != null && curHolder.location != destHolder.location) {
+                            if (core.move(curHolder.location, destHolder.location)) {
+                                core.setPiece(destHolder.location, currentPiece);
+                                core.setPiece(curHolder.location, null);
+                                curHolder.piece = touchImage;
+                                destHolder.piece.setImageResource(core.getPiece(destHolder.location).getImageResource());
+                                square.setTag(destHolder);
+                                piece.setVisibility(View.VISIBLE);
+                                return true;
+                            }
                         }
-                        return false;
+                    } catch (Exception e) {
+                        Log.d("Move", "Move Exception Thrown");
                     }
-                    break;
+                    touchImage.setVisibility(View.VISIBLE);
+                    return false;
                 case DragEvent.ACTION_DRAG_ENDED:
                     break;
             }

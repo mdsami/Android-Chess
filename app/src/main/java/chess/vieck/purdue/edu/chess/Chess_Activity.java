@@ -4,10 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
 
 public class Chess_Activity extends ActionBarActivity {
@@ -25,14 +22,6 @@ public class Chess_Activity extends ActionBarActivity {
         board = new Board_Adapter(this);
         board.setCore(core);
         gridView.setAdapter(board);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
-                Toast.makeText(Chess_Activity.this, "" + position,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {

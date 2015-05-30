@@ -1,7 +1,6 @@
 package chess.vieck.purdue.edu.chess;
 
 import android.util.Log;
-import android.widget.ImageView;
 
 import java.util.ArrayList;
 
@@ -10,35 +9,11 @@ import java.util.ArrayList;
  */
 public class Core {
 
-    private Player white, black;
-
-    private objectColour turn;
-
-    private gameState currentGameState;
-
     public Integer[] boardSquares;
-
     public Piece[] pieceArray;
-
-    protected enum pieceType {
-        pawn, bishop, knight, rook, queen, king
-    }
-
-    protected enum objectColour {
-        black, white
-    }
-
-    protected enum pieceState {
-        alive, dead
-    }
-
-    protected enum gameState {
-        allClear, whiteCheck, whiteMate, blackCheck, blackMate, stalemate
-    }
-
-    protected enum moveStatus {
-        success, fail, promote
-    }
+    private Player white, black;
+    private objectColour turn;
+    private gameState currentGameState;
 
     // .ctor
     public Core() {
@@ -48,6 +23,29 @@ public class Core {
         currentGameState = gameState.allClear;
         white = new Player(objectColour.white);
         black = new Player(objectColour.black);
+    }
+
+    private static gameState checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
+   /*     Piece own[];
+        Piece opponent[];
+        if (whoseCheck == objectColour.white) {
+            own = white.getPieces();
+            opponent = black.getPieces();
+        } else {
+            own = black.getPieces();
+            opponent = white.getPieces();
+        }
+        for (int i = 0; i < 15; i++) {
+            ArrayList<Integer> moves = opponent[i].getAvailableMoves();
+            if (moves != null
+                    && (!moves.isEmpty() && moves.contains(own[15].getLocation()))) {
+                if (whoseCheck == objectColour.white)
+                    return gameState.whiteCheck;
+                else
+                    return gameState.blackCheck;
+            }
+        }*/
+        return gameState.allClear;
     }
 
     public void createBoard() {
@@ -110,31 +108,37 @@ public class Core {
         return turn;
     }
 
-    public void setTurn(objectColour turn) {
-        this.turn = turn;
+    public void setTurn() {
+        turn = (turn == objectColour.white) ? objectColour.black : objectColour.white;
     }
 
-    public Piece getPiece(int position){
+    public Piece getPiece(int position) {
         return pieceArray[position];
     }
 
-    public void setPiece(int loc, Piece piece){
+    public void setPiece(int loc, Piece piece) {
         pieceArray[loc] = piece;
     }
+
     public Integer squareImage(int position) {
         return boardSquares[position % 2];
     }
 
-    public Integer pieceImage(int position) {
+    public Integer getPieceImage(int position) {
         if (pieceArray[position] != null)
             return pieceArray[position].getImageResource();
         return null;
     }
 
+    public void setPieceImage(int position, int imageResource) {
+        if (pieceArray[position] != null)
+            pieceArray[position].setImageResource(imageResource);
+    }
+
     // move: moves the Piece if the move is valid; returns false otherwise
     public boolean move(int from, int to) throws Exception {
         Player currentPlayer = (turn == objectColour.white) ? white : black;
-        Log.d("Move","pieceArray["+from+"]:"+pieceArray[from].getPieceColour() + " currentPlayer:" + currentPlayer.getColour());
+        Log.d("Move", "pieceArray[" + from + "]:" + pieceArray[from].getPieceColour() + " currentPlayer:" + turn);
         if (pieceArray[from] == null || pieceArray[from].getPieceColour() != currentPlayer.getColour() || to < 0 || to > 63)
             return false;
         // TODO: cache this so that we're not constantly re-populating
@@ -143,48 +147,21 @@ public class Core {
             moveStatus status = pieceArray[from].tryMove(to);
             if (status != moveStatus.promote) {
                 if (status == moveStatus.success) {
+                    Log.d("Move", "" + turn);
                     return true;
                 } else
                     return false;
             } else {
-
-                try {
-                    pieceType type = pieceType.bishop;
-                    // TODO: promotion logic
-                    // promotion code: UI, etc.
-                    pieceArray[from].setPieceType(type);
-                    return true;
-                } catch (incompatiblePieceTypeConversionException ex) {
-                    throw new Exception(
-                            "MAN, WHAT THE FUCK!? Promotion code is seriously jacked up.");
-                }
+                pieceType type = pieceType.bishop;
+                // TODO: promotion logic
+                // promotion code: UI, etc.
+                //pieceArray[from].setPieceType(type);
+                setTurn();
+                return true;
             }
         }
+        Log.d("Move", "No available moves");
         return false;
-    }
-
-
-    private static gameState checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
-   /*     Piece own[];
-        Piece opponent[];
-        if (whoseCheck == objectColour.white) {
-            own = white.getPieces();
-            opponent = black.getPieces();
-        } else {
-            own = black.getPieces();
-            opponent = white.getPieces();
-        }
-        for (int i = 0; i < 15; i++) {
-            ArrayList<Integer> moves = opponent[i].getAvailableMoves();
-            if (moves != null
-                    && (!moves.isEmpty() && moves.contains(own[15].getLocation()))) {
-                if (whoseCheck == objectColour.white)
-                    return gameState.whiteCheck;
-                else
-                    return gameState.blackCheck;
-            }
-        }*/
-        return gameState.allClear;
     }
 
     private gameState checkForMate() {
@@ -221,8 +198,29 @@ public class Core {
         return gameState.allClear;
     }
 
+    protected enum pieceType {
+        pawn, bishop, knight, rook, queen, king
+    }
+
+    protected enum objectColour {
+        black, white
+    }
+
+    protected enum pieceState {
+        alive, dead
+    }
+
+
+    protected enum gameState {
+        allClear, whiteCheck, whiteMate, blackCheck, blackMate, stalemate
+    }
+
+    protected enum moveStatus {
+        success, fail, promote
+    }
+
     private interface availableMoves {
-        public ArrayList<Integer> getAvailableMoves(Piece Piece);
+        ArrayList<Integer> getAvailableMoves(Piece Piece);
     }
 
     private static class Player {
@@ -256,7 +254,7 @@ public class Core {
         private int location;
         // state of the Piece
         private pieceState state;
-        private ImageView imageResource;
+        private int imageResource;
         // type of Piece
         private pieceType type;
 
@@ -265,7 +263,7 @@ public class Core {
         private availableMoves availMoves;
 
         Piece(objectColour colour, pieceType type, int location,
-              availableMoves movementPattern, ImageView imageResource) {
+              availableMoves movementPattern, int imageResource) {
             this.colour = colour;
             this.type = type;
             this.location = location;
@@ -289,11 +287,11 @@ public class Core {
             }
         }
 
-        public ImageView getImageResource() {
+        public int getImageResource() {
             return imageResource;
         }
 
-        public void setImageResource(ImageView imageResource) {
+        public void setImageResource(int imageResource) {
             this.imageResource = imageResource;
         }
 
@@ -360,10 +358,8 @@ public class Core {
                 oldPiece.setPieceState(pieceState.alive);
             }
 
-            if ((colour == objectColour.white && tryState == gameState.whiteCheck)
-                    || (colour == objectColour.black && tryState == gameState.blackCheck))
-                return false;
-            return true;
+            return !((colour == objectColour.white && tryState == gameState.whiteCheck)
+                    || (colour == objectColour.black && tryState == gameState.blackCheck));
         }
 
         public moveStatus tryMove(int moveToLocation) {
@@ -403,50 +399,49 @@ public class Core {
             //TODO: fix pieceArray and do not check for white and black, just opposite
             // as standard, white is on bottom, black on top
             // white moves 6 -> 0; black moves 1 -> 7
-            if (piece.getPieceColour() == objectColour.white) {
+            if (piece.getPieceColour() == objectColour.black) {
                 // check moving left
-                if (currLocation % 8 != 0
+                int modLocation = currLocation % 8;
+                if (modLocation != 0
                         && pieceArray[currLocation + 7] != null
                         && pieceArray[currLocation + 7]
-                        .getPieceColour() == objectColour.black)
+                        .getPieceColour() == objectColour.white)
                     retList.add(currLocation + 7);
-
+                modLocation = (currLocation - 7) % 8;
                 // check moving right
-                if (currLocation - 7 % 8 != 0
+                if (modLocation != 0
                         && pieceArray[currLocation + 9] != null
-                        && pieceArray[currLocation + 9].getPieceColour() == objectColour.black)
+                        && pieceArray[currLocation + 9].getPieceColour() == objectColour.white)
                     retList.add(currLocation + 9);
 
                 // default location, making 4 available moves, rather than 3
-                if (pieceArray[currLocation + 1] == null) {
+                if (pieceArray[currLocation + 8] == null && currLocation <= 63) {
                     if (currLocation >= 8 && currLocation <= 15) {
                         retList.add(currLocation + 16);
-                    } else {
-                        retList.add(currLocation + 16);
                     }
-                } else {
-                    // COPY PASTA! YAAY! : (
-                    // move forward one Cell
-                    if (currLocation > 0 && pieceArray[currLocation - 1] == null) {
-                        if (currLocation >= 56 && currLocation <= 63) {
-                            retList.add(currLocation - 16);
-                        } else {
-                            retList.add(currLocation - 8);
-                        }
-                    }
-
-                    // check moving left
-                    if (currLocation > 0 && currLocation % 8 != 0
-                            && pieceArray[currLocation - 9] != null
-                            && pieceArray[currLocation - 7].getPieceColour() == objectColour.white)
-                        retList.add(currLocation - 9);
-
-                    // check moving right
-                    if (currLocation > 0 && currLocation - 7 % 8 != 0
-                            && pieceArray[currLocation - 7] != null
-                            && pieceArray[currLocation - 7].getPieceColour() == objectColour.white)
-                        retList.add(currLocation - 7);
+                    retList.add(currLocation + 8);
                 }
+            } else {
+                // COPY PASTA! YAAY! : (
+                // move forward one Cell
+                if (currLocation > 0 && pieceArray[currLocation - 8] == null) {
+                    if (currLocation >= 48 && currLocation <= 55) {
+                        retList.add(currLocation - 16);
+                    }
+                    retList.add(currLocation - 8);
+                }
+
+                // check moving left
+                if (currLocation > 0 && currLocation % 8 != 0
+                        && pieceArray[currLocation - 7] != null
+                        && pieceArray[currLocation - 7].getPieceColour() == objectColour.black)
+                    retList.add(currLocation - 7);
+
+                // check moving right
+                if (currLocation > 0 && (currLocation - 7) % 8 != 0
+                        && pieceArray[currLocation - 9] != null
+                        && pieceArray[currLocation - 9].getPieceColour() == objectColour.black)
+                    retList.add(currLocation - 9);
             }
             return retList;
         }
@@ -461,22 +456,9 @@ public class Core {
             int i = 0;
 
             // right, up
-            while ((currLocation + i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation < 56
-                    && pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+            while (currLocation > 7 && (currLocation - i != 7 * (currLocation / 8) + (currLocation % 7))
+                    && pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
                 // if the Piece is one of the opponent's, it is a valid move
-                if (pieceArray[currLocation + i] != null
-                        && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
-                    retList.add(currLocation + i);
-                    break;
-                }
-                retList.add(currLocation + i);
-                i += 9;
-            }
-
-            i = 0;
-            // right, down
-            while ((currLocation - i != 7 * (currLocation / 8) + (currLocation % 7)) && currLocation > 7
-                    && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
                 if (pieceArray[currLocation - i] != null
                         && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
                     retList.add(currLocation - i);
@@ -487,21 +469,22 @@ public class Core {
             }
 
             i = 0;
-            // left, down
-            while ((currLocation > -1 && currLocation - i != 8 * (currLocation / 8) + (currLocation % 8) && currLocation > 7)
-                    && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation - i] != null
-                        && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
-                    retList.add(currLocation - i);
+            // right, down
+            while (currLocation < 55 && (currLocation + i != 7 * (currLocation / 8) + (currLocation % 7))
+                    && (pieceArray[currLocation + i] == null ||
+                    pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour())) {
+                if (pieceArray[currLocation + i] != null
+                        && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
+                    retList.add(currLocation + i);
                     break;
                 }
-                retList.add(currLocation - i);
+                retList.add(currLocation + i);
                 i += 9;
             }
 
             i = 0;
-            // left, up
-            while ((currLocation < 55 && currLocation + i != 8 * (currLocation / 8) + (currLocation % 8))
+            // left, down
+            while (currLocation < 56 && (currLocation + i != 8 * (currLocation / 8) + (currLocation % 8))
                     && (pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour())) {
                 if (pieceArray[currLocation + i] != null
                         && pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour()) {
@@ -510,6 +493,19 @@ public class Core {
                 }
                 retList.add(currLocation + i);
                 i += 7;
+            }
+
+            i = 0;
+            // left, up
+            while (currLocation > 8 && (currLocation - i != 8 * (currLocation / 8) + (currLocation % 8))
+                    && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
+                if (pieceArray[currLocation - i] != null
+                        && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
+                    retList.add(currLocation - i);
+                    break;
+                }
+                retList.add(currLocation - i);
+                i += 9;
             }
 
             return retList;
@@ -522,46 +518,49 @@ public class Core {
                 return null;
             ArrayList<Integer> retList = new ArrayList<Integer>();
             int currLocation = piece.getLocation();
-
+            //Todo: Fix the if statement params
+            /* 54 47 10 13 17 16 */
             //Two over and one up
-            if (currLocation < 54 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
+            if (currLocation > 14 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
                     && (pieceArray[currLocation + 10] == null || pieceArray[currLocation + 10].getPieceColour() != piece.getPieceColour()))
-                retList.add(currLocation + 10);
-
-            //Two back and one up
-            if (currLocation % 8 != 0 && (currLocation - 1 % 8) != 0
-                    && (pieceArray[currLocation + 6] == null || pieceArray[currLocation + 6].getPieceColour() != piece.getPieceColour()))
-                retList.add(currLocation + 6);
-
-            //One over and two up
-            if (currLocation < 47 && currLocation - 7 % 8 != 0
-                    && (pieceArray[currLocation + 17] == null || pieceArray[currLocation + 17].getPieceColour() != piece.getPieceColour()))
-                retList.add(currLocation + 17);
-
-            //One over and two up
-            if (currLocation % 8 != 0 && currLocation < 48
-                    && (pieceArray[currLocation + 15] == null || pieceArray[currLocation + 15].getPieceColour() != piece.getPieceColour()))
-                retList.add(currLocation + 15);
-
-            //Two over and one down
-            if (currLocation >= 13 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
-                    && (pieceArray[currLocation - 6] == null || pieceArray[currLocation - 6].getPieceColour() != piece.getPieceColour()))
                 retList.add(currLocation - 6);
 
-            //Two back and one down
-            if (currLocation >= 10 && currLocation % 8 != 0 && currLocation - 1 % 8 != 0
-                    && (pieceArray[currLocation - 10] == null || pieceArray[currLocation - 10].getPieceColour() != piece.getPieceColour()))
+            //Two back and one up
+            if (currLocation % 8 != 0 && currLocation % 8 != 0 && currLocation - 1 % 8 != 0
+                    && (pieceArray[currLocation + 6] == null || pieceArray[currLocation + 6].getPieceColour() != piece.getPieceColour()))
                 retList.add(currLocation - 10);
 
-            //One over and two down
-            if (currLocation >= 16 && currLocation - 7 % 8 != 0
-                    && (pieceArray[currLocation - 15] == null || pieceArray[currLocation - 15].getPieceColour() != piece.getPieceColour()))
+            //One over and two up
+            if (currLocation > 15 && currLocation - 7 % 8 != 0
+                    && (pieceArray[currLocation + 17] == null || pieceArray[currLocation + 17].getPieceColour() != piece.getPieceColour()))
                 retList.add(currLocation - 15);
 
-            //One back and two down
-            if (currLocation > 17 && currLocation % 8 != 0
-                    && (pieceArray[currLocation - 17] == null || pieceArray[currLocation - 17].getPieceColour() != piece.getPieceColour()))
+            //One over and two down
+            if (currLocation < 48 && currLocation % 8 != 0
+                    && (pieceArray[currLocation + 15] == null || pieceArray[currLocation + 15].getPieceColour() != piece.getPieceColour()))
                 retList.add(currLocation - 17);
+
+            //Two back and one down
+            if (currLocation < 56 && currLocation - 6 % 8 != 0 && currLocation - 7 % 8 != 0
+                    && (pieceArray[currLocation - 10] == null || pieceArray[currLocation - 10].getPieceColour() != piece.getPieceColour()))
+                retList.add(currLocation + 6);
+
+            //Two over and one down
+            if (currLocation < 54 && (currLocation - 1 % 8) != 0
+                    && (pieceArray[currLocation - 6] == null || pieceArray[currLocation - 6].getPieceColour() != piece.getPieceColour()))
+                retList.add(currLocation + 10);
+
+            //One back and two down
+            if (currLocation < 48 && currLocation % 8 != 0
+                    && (pieceArray[currLocation - 17] == null || pieceArray[currLocation - 17].getPieceColour() != piece.getPieceColour()))
+                retList.add(currLocation + 15);
+
+            //One over and two down
+            if (currLocation < 47 && currLocation - 7 % 8 != 0
+                    && (pieceArray[currLocation - 15] == null || pieceArray[currLocation - 15].getPieceColour() != piece.getPieceColour()))
+                retList.add(currLocation + 17);
+
+
 
             return retList;
         }
@@ -602,19 +601,6 @@ public class Core {
 
             i = 8;
             // down
-            while (currLocation - i > 0
-                    && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
-                if (pieceArray[currLocation - i] != null
-                        && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
-                    retList.add(currLocation - i);
-                    break;
-                }
-                retList.add(currLocation - i);
-                i += 8;
-            }
-
-            i = 1;
-            // up
             while (currLocation + i <= 63
                     && (pieceArray[currLocation + i] == null || pieceArray[currLocation + i].getPieceColour() != piece.getPieceColour())) {
                 if (pieceArray[currLocation + i] != null
@@ -623,7 +609,20 @@ public class Core {
                     break;
                 }
                 retList.add(currLocation + i);
-                i++;
+                i += 8;
+            }
+
+            i = 1;
+            // up
+            while (currLocation - i >= 0
+                    && (pieceArray[currLocation - i] == null || pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour())) {
+                if (pieceArray[currLocation - i] != null
+                        && pieceArray[currLocation - i].getPieceColour() != piece.getPieceColour()) {
+                    retList.add(currLocation - i);
+                    break;
+                }
+                retList.add(currLocation - i);
+                i += 8;
             }
             return retList;
         }
@@ -663,16 +662,16 @@ public class Core {
             // Also: don't check for mate here.
 
             //Foward Right
-            if (currLocation < 63
-                    && (pieceArray[currLocation + 9] == null))
-                retList.add(currLocation + 9);
+            if (currLocation >= 7
+                    && (pieceArray[currLocation - 7] == null))
+                retList.add(currLocation - 7);
             //Foward Left
-            if (currLocation % 8 != 0 && (pieceArray[currLocation + 6] == null))
-                retList.add(currLocation + 6);
+            if (currLocation % 8 != 0 && (pieceArray[currLocation - 9] == null))
+                retList.add(currLocation - 9);
             //Foward Straight
-            if (currLocation < 56
-                    && (piece.isValidMove(currLocation + 8)))
-                retList.add(currLocation + 8);
+            if (currLocation >= 8
+                    && (piece.isValidMove(currLocation - 8)))
+                retList.add(currLocation - 8);
             //Right
             if (currLocation - 7 % 8 != 0 && (piece.isValidMove(currLocation + 1)))
                 retList.add(currLocation + 1);
@@ -681,15 +680,15 @@ public class Core {
                     && (piece.isValidMove(currLocation - 1)))
                 retList.add(currLocation - 1);
             //Back Left
-            if (currLocation >= 9 && currLocation % 8 != 0 && (piece.isValidMove(currLocation - 9)))
-                retList.add(currLocation - 9);
+            if (currLocation >= 9 && currLocation % 8 != 0 && (piece.isValidMove(currLocation + 7)))
+                retList.add(currLocation + 7);
             //Back Right
-            if (currLocation - 7 % 8 != 0
-                    && (piece.isValidMove(currLocation - 7)))
-                retList.add(currLocation - 7);
+            if (currLocation + 9 % 8 != 0
+                    && (piece.isValidMove(currLocation + 9)))
+                retList.add(currLocation + 9);
             //Back Straight
-            if (currLocation > 7 && piece.isValidMove(currLocation - 1))
-                retList.add(currLocation - 1);
+            if (currLocation > 7 && piece.isValidMove(currLocation + 8))
+                retList.add(currLocation + 8);
 
             return retList;
         }
