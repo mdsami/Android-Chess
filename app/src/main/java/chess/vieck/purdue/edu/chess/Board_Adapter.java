@@ -22,8 +22,6 @@ import chess.vieck.purdue.edu.chess.Core.Piece;
  * Created by Michael on 4/10/2015.
  */
 public class Board_Adapter extends BaseAdapter {
-    boolean pieceSelected;
-    boolean reset;
     FrameLayout touchLayout;
     ImageView touchImage;
     Piece currentPiece;
@@ -34,8 +32,6 @@ public class Board_Adapter extends BaseAdapter {
     Board_Adapter(Context context) {
         this.context = context;
         currentPiece = null;
-        pieceSelected = false;
-        reset = false;
     }
 
     protected void setCore(Core core) {
@@ -44,7 +40,7 @@ public class Board_Adapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return core.getBoardLength();
+        return 64;
     }
 
     @Override
@@ -63,7 +59,7 @@ public class Board_Adapter extends BaseAdapter {
         if (convertView == null) {
             //Inflate the layout
             final LayoutInflater layoutInflater = LayoutInflater.from(this.context);
-            squareContainerView = layoutInflater.inflate(R.layout.square, null);
+            squareContainerView = layoutInflater.inflate(R.layout.square, parent, false);
 
             // Background
             ViewHolder viewHolder = new ViewHolder();
@@ -80,12 +76,6 @@ public class Board_Adapter extends BaseAdapter {
             viewHolder.piece.setTag(viewHolder);
         } else {
             squareContainerView = convertView;
-
-        }
-        /*ViewHolder viewHolder = (ViewHolder) squareContainerView.getTag();
-        viewHolder.piece.setTag(viewHolder);*/
-        if (core.getPiece(position) != null) {
-            Log.d("Initialize Board", "Location " + position + " color " + core.getPiece(position).getPieceColour() + " type " + core.getPiece(position).getPieceType());
         }
         return squareContainerView;
     }
@@ -141,10 +131,13 @@ public class Board_Adapter extends BaseAdapter {
                             if (core.move(curHolder.location, destHolder.location)) {
                                 core.setPiece(destHolder.location, currentPiece);
                                 core.setPiece(curHolder.location, null);
+                                core.pieceArray[destHolder.location].setLocation(destHolder.location);
                                 curHolder.piece = touchImage;
                                 destHolder.piece.setImageResource(core.getPiece(destHolder.location).getImageResource());
                                 square.setTag(destHolder);
                                 piece.setVisibility(View.VISIBLE);
+                                //TextView txt_turn = (TextView) v.findViewById(R.id.txt_turn);
+                                //txt_turn.setText(""+core.getTurn());
                                 return true;
                             }
                         }

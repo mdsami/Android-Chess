@@ -2,7 +2,6 @@
     android:id="@+id/square_frame"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#ff00ff15"
     android:gravity="center_horizontal"
     android:orientation="vertical">
 

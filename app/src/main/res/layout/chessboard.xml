@@ -1,12 +1,25 @@
-<GridView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/chessboard"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#ffffff"
-    android:columnWidth="60dp"
-    android:gravity="center_horizontal"
-    android:numColumns="8"
-    android:padding="5dp"
-    android:stretchMode="columnWidth">
+    android:layout_height="match_parent">
 
-</GridView>
+    <GridView
+        android:id="@+id/chessboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffff"
+        android:columnWidth="60dp"
+        android:gravity="center_horizontal"
+        android:numColumns="8"
+        android:padding="5dp"
+        android:stretchMode="columnWidth">
+
+    </GridView>
+
+    <TextView
+        android:id="@+id/txt_turn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="white" />
+</LinearLayout>
+
