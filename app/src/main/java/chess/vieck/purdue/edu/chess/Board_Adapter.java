@@ -1,7 +1,9 @@
 package chess.vieck.purdue.edu.chess;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
@@ -14,9 +16,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Toast;
-
-import chess.vieck.purdue.edu.chess.Core.Piece;
+import android.widget.TextView;
 
 /**
  * Created by Michael on 4/10/2015.
@@ -24,14 +24,16 @@ import chess.vieck.purdue.edu.chess.Core.Piece;
 public class Board_Adapter extends BaseAdapter {
     FrameLayout touchLayout;
     ImageView touchImage;
-    Piece currentPiece;
+    Core.Piece currentPiece;
     ViewHolder curHolder, destHolder = null;
+    View rootView;
     private Context context;
     private Core core;
 
     Board_Adapter(Context context) {
         this.context = context;
         currentPiece = null;
+        rootView = ((Activity) context).getWindow().getDecorView().getRootView();
     }
 
     protected void setCore(Core core) {
@@ -124,11 +126,14 @@ public class Board_Adapter extends BaseAdapter {
                     square = (FrameLayout) v.getParent();
                     piece = (ImageView) square.getChildAt(1);
                     destHolder = (ViewHolder) square.getTag();
-                    Toast.makeText(context, "" + curHolder.location + " " + destHolder.location,
-                            Toast.LENGTH_SHORT).show();
                     try {
                         if (currentPiece != null && curHolder.location != destHolder.location) {
                             if (core.move(curHolder.location, destHolder.location)) {
+                                if (core.testCheckMate(destHolder.location)) {
+                                    context.startActivity(new Intent(context, StartActivity.class));
+                                }
+                                TextView txt_check = (TextView) rootView.findViewById(R.id.txt_inCheck);
+                                txt_check.setText("");
                                 core.setPiece(destHolder.location, currentPiece);
                                 core.setPiece(curHolder.location, null);
                                 core.pieceArray[destHolder.location].setLocation(destHolder.location);
@@ -136,9 +141,24 @@ public class Board_Adapter extends BaseAdapter {
                                 destHolder.piece.setImageResource(core.getPiece(destHolder.location).getImageResource());
                                 square.setTag(destHolder);
                                 piece.setVisibility(View.VISIBLE);
-                                //TextView txt_turn = (TextView) v.findViewById(R.id.txt_turn);
-                                //txt_turn.setText(""+core.getTurn());
+                                if (core.testCheck(destHolder.location)) {
+                                    txt_check.setText("In Check");
+                                    if (core.testCheckMate(destHolder.location)) {
+                                        context.startActivity(new Intent(context, StartActivity.class));
+                                    }
+                                }
+                                core.setTurn();
+                                TextView txt_turn = (TextView) rootView.findViewById(R.id.txt_turn);
+                                txt_turn.setText("" + core.getTurn());
+
                                 return true;
+                            } else if (core.testCheck(curHolder.location)) {
+                                if (core.testCheckMate(destHolder.location)) {
+                                    context.startActivity(new Intent(context, StartActivity.class));
+                                } else {
+                                    TextView txt_check = (TextView) rootView.findViewById(R.id.txt_inCheck);
+                                    txt_check.setText("In Check");
+                                }
                             }
                         }
                     } catch (Exception e) {

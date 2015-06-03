@@ -6,40 +6,44 @@ public class Core {
 
     public Integer[] boardSquares;
     public Piece[] pieceArray;
+    protected int bkingpos = 4;
+    protected int wkingpos = 60;
+    ArrayList<Integer> availableMoves;
+    boolean check = false;
     private Player white, black;
     private objectColour turn;
-    //private gameState currentGameState;
 
-    // .ctor
     public Core() {
-        // if new game
         createBoard();
         turn = objectColour.white;
         white = new Player(objectColour.white);
         black = new Player(objectColour.black);
     }
 
-    private static boolean checkForCheck(Piece[] pieceArray, objectColour whoseCheck) {
-   /*     Piece own[];
-        Piece opponent[];
-        if (whoseCheck == objectColour.white) {
-            own = white.getPieces();
-            opponent = black.getPieces();
-        } else {
-            own = black.getPieces();
-            opponent = white.getPieces();
-        }
-        for (int i = 0; i < 15; i++) {
-            ArrayList<Integer> moves = opponent[i].getAvailableMoves();
-            if (moves != null
-                    && (!moves.isEmpty() && moves.contains(own[15].getLocation()))) {
-                if (whoseCheck == objectColour.white)
-                    return gameState.whiteCheck;
-                else
-                    return gameState.blackCheck;
-            }
-        }*/
-        return false;
+    public objectColour getTurn() {
+        return turn;
+    }
+
+    public void setTurn() {
+        turn = (turn == objectColour.white) ? objectColour.black : objectColour.white;
+    }
+
+    public Piece getPiece(int position) {
+        return pieceArray[position];
+    }
+
+    public void setPiece(int loc, Piece piece) {
+        pieceArray[loc] = piece;
+    }
+
+    public Integer squareImage(int position) {
+        return boardSquares[position % 2];
+    }
+
+    public Integer getPieceImage(int position) {
+        if (pieceArray[position] != null)
+            return pieceArray[position].getImageResource();
+        return null;
     }
 
     public void createBoard() {
@@ -84,42 +88,15 @@ public class Core {
         }
     }
 
-    public objectColour getTurn() {
-        return turn;
-    }
-
-    public void setTurn() {
-        turn = (turn == objectColour.white) ? objectColour.black : objectColour.white;
-    }
-
-    public Piece getPiece(int position) {
-        return pieceArray[position];
-    }
-
-    public void setPiece(int loc, Piece piece) {
-        pieceArray[loc] = piece;
-    }
-
-    public Integer squareImage(int position) {
-        return boardSquares[position % 2];
-    }
-
-    public Integer getPieceImage(int position) {
-        if (pieceArray[position] != null)
-            return pieceArray[position].getImageResource();
-        return null;
-    }
-
     // move: moves the Piece if the move is valid; returns false otherwise
     public boolean move(int from, int to) throws Exception {
 
         Player currentPlayer = (getTurn() == objectColour.white) ? white : black;
         if (pieceArray[from] == null || pieceArray[from].getPieceColour() != currentPlayer.getColour() || to < 0 || to > 63)
             return false;
+        availableMoves = pieceArray[from].getAvailableMoves();
 
-        ArrayList<Integer> availableMoves = pieceArray[from].getAvailableMoves();
         if (availableMoves.contains(to)) {
-            setTurn();
             return true;
         } else if (pieceArray[from].getPieceType() == pieceType.king) {
             //pieceType type = pieceType.bishop;
@@ -129,38 +106,23 @@ public class Core {
         return false;
     }
 
-    private boolean testCheck() {
-        // TODO: check for stalemate here
-        /*
-        ArrayList<Integer> whiteMoves = new ArrayList<Integer>();
-        ArrayList<Integer> blackMoves = new ArrayList<Integer>();
-
-        for (int i = 0; i < 15; i++) {
-            ArrayList<Integer> moves = white.getPieces()[i].getAvailableMoves();
-            for (int j = 0; j < moves.size(); j++)
-                whiteMoves.add(moves.get(j));
-            moves = black.getPieces()[i].getAvailableMoves();
-            for (int j = 0; j < moves.size(); j++)
-                blackMoves.add(moves.get(j));
+    public boolean testCheck(int location) {
+        if (getTurn() == objectColour.white) {
+            if (pieceArray[location].getAvailableMoves().contains(bkingpos)) {
+                check = true;
+                return true;
+            }
+        } else {
+            if (pieceArray[location].getAvailableMoves().contains(wkingpos)) {
+                check = true;
+                return true;
+            }
         }
-        if (blackMoves.size() == 0) {
-            if (checkForCheck(pieceArray, objectColour.black) == gameState.blackCheck)
-                return gameState.blackMate;
-            else
-                return gameState.stalemate;
-        }
-        if (whiteMoves.size() == 0) {
-            if (checkForCheck(pieceArray, objectColour.white) == gameState.whiteCheck)
-                return gameState.whiteMate;
-            else
-                return gameState.stalemate;
-        }
-        if (checkForCheck(pieceArray, objectColour.white) == gameState.whiteCheck)
-            return gameState.whiteCheck;
-        if (checkForCheck(pieceArray, objectColour.black) == gameState.blackCheck)
-            return gameState.blackCheck;
-            */
         return false;
+    }
+
+    public boolean testCheckMate(int location) {
+        return pieceArray[location].getAvailableMoves() == null;
     }
 
     protected enum pieceType {
@@ -170,6 +132,7 @@ public class Core {
     protected enum objectColour {
         black, white
     }
+
 
     private interface availableMoves {
         ArrayList<Integer> getAvailableMoves(Piece Piece);
@@ -229,9 +192,9 @@ public class Core {
             return imageResource;
         }
 
-        public void setImageResource(int imageResource) {
+        /*public void setImageResource(int imageResource) {
             this.imageResource = imageResource;
-        }
+        }*/
 
         public objectColour getPieceColour() {
             return colour;
@@ -504,6 +467,7 @@ public class Core {
                 retList.add(currLocation - i);
                 i += 8;
             }
+
             return retList;
         }
     }
@@ -526,38 +490,940 @@ public class Core {
     }
 
     protected class King implements availableMoves {
+        private Rook crossCheck;
+        private Bishop diagonalCheck;
+
         public ArrayList<Integer> getAvailableMoves(Piece piece) {
             ArrayList<Integer> retList = new ArrayList<>();
             int currLocation = piece.getLocation();
+            //Todo: Check outward for a piece of the opposite color in every direction except the one you came from
+            /*
+                    int tempLoc = currLocation - 9;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
 
+                    i = 1;
+                    // left
+                    while ((tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // left, up
+                    while (tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+             */
             if (currLocation >= 8) {
                 //Foward Right
-                if ((currLocation - 7) % 8 != 0 && pieceArray[currLocation - 7] == null)
-                    retList.add(currLocation - 7);
+                if ((currLocation - 7) % 8 != 0 && pieceArray[currLocation - 7] == null) {
+
+                    int i = 1;
+                    int tempLoc = currLocation - 7;
+                    boolean valid = true;
+
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 1;
+                    // left
+                    while (valid && (tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (valid && tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 9;
+                    // left, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    if (valid)
+                        retList.add(tempLoc);
+
+                }
+
                 //Foward Left
-                if (currLocation % 8 != 0 && (pieceArray[currLocation - 9] == null))
-                    retList.add(currLocation - 9);
+                if (currLocation % 8 != 0 && (pieceArray[currLocation - 9] == null)) {
+                    int tempLoc = currLocation - 9;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 1;
+                    // left
+                    while (valid && (tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+
+                    i = 9;
+                    // left, up
+                    while (tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+                    if (valid)
+                        retList.add(currLocation - 9);
+                }
                 //Foward Straight
-                if (pieceArray[currLocation - 8] == null)
-                    retList.add(currLocation - 8);
+                if (pieceArray[currLocation - 8] == null) {
+                    int tempLoc = currLocation - 8;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 1;
+                    // left
+                    while (valid && (tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // up
+                    while (valid && tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // left, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+                    if (valid)
+                        retList.add(tempLoc);
+                }
                 //Right
-                if ((currLocation - 7) % 8 != 0 && pieceArray[currLocation + 1] == null)
-                    retList.add(currLocation + 1);
+                if ((currLocation - 7) % 8 != 0 && pieceArray[currLocation + 1] == null) {
+                    int tempLoc = currLocation + 1;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (valid && tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // left, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+                    if (valid)
+                        retList.add(tempLoc);
+                }
                 //Left
-                if (currLocation % 8 != 0
-                        && pieceArray[currLocation - 1] == null)
-                    retList.add(currLocation - 1);
+                if (currLocation % 8 != 0 && pieceArray[currLocation - 1] == null) {
+                    int tempLoc = currLocation - 1;
+                    boolean valid = true;
+
+                    int i = 1;
+                    // left
+                    while ((tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (valid && tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // left, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+                    if (valid)
+                        retList.add(tempLoc);
+                }
             } else if (currLocation <= 55) {
                 //Back Left
-                if (currLocation % 8 != 0 && pieceArray[currLocation + 7] == null)
-                    retList.add(currLocation + 7);
+                if (currLocation % 8 != 0 && pieceArray[currLocation + 7] == null) {
+                    int tempLoc = currLocation + 7;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 1;
+                    // left
+                    while (valid && (tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (valid && tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+
+                    if (valid)
+                        retList.add(tempLoc);
+                }
+
                 //Back Right
                 if (currLocation - 7 % 8 != 0
-                        && pieceArray[currLocation + 9] == null)
-                    retList.add(currLocation + 9);
+                        && pieceArray[currLocation + 9] == null) {
+                    int tempLoc = currLocation + 9;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 1;
+                    // left
+                    while (valid && (tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 8;
+                    // up
+                    while (valid && tempLoc - i >= 0
+                            && (pieceArray[tempLoc - i] == null || pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+
+                    if (valid)
+                        retList.add(tempLoc);
+                }
                 //Back Straight
-                if (pieceArray[currLocation + 8] == null)
-                    retList.add(currLocation + 8);
+                if (pieceArray[currLocation + 8] == null) {
+                    int tempLoc = currLocation + 8;
+                    boolean valid = true;
+                    int i = 1;
+                    // right
+                    while ((tempLoc + i - 1 - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 1;
+                    // left
+                    while (valid && (tempLoc - i + 1) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i++;
+                    }
+
+                    i = 8;
+                    // down
+                    while (valid && tempLoc + i <= 63
+                            && (pieceArray[tempLoc + i] == null || pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour())) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 8;
+                    }
+
+                    i = 7;
+
+                    // right, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // right, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 16) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+
+                    i = 7;
+                    // left, down
+                    while (valid && tempLoc + i <= 63 && (tempLoc + i - 7) % 8 != 0) {
+                        if (pieceArray[tempLoc + i] != null) {
+                            if (pieceArray[tempLoc + i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc + i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        retList.add(currLocation + i);
+                        i += 7;
+                    }
+
+                    i = 9;
+                    // left, up
+                    while (valid && tempLoc - i >= 0 && (tempLoc - i + 9) % 8 != 0) {
+                        if (pieceArray[tempLoc - i] != null) {
+                            if (pieceArray[tempLoc - i].getPieceColour() != piece.getPieceColour()) {
+                                if (pieceArray[tempLoc - i].getAvailableMoves().contains(tempLoc))
+                                    valid = false;
+                            }
+                            break;
+                        }
+                        i += 9;
+                    }
+                    if (valid)
+                        retList.add(tempLoc);
+                }
             }
 
             return retList;

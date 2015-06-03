@@ -11,8 +11,6 @@ public class Chess_Activity extends ActionBarActivity {
     private Core core;
     private Board_Adapter board;
 
-    private String user;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
